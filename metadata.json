@@ -1,0 +1,6 @@
+{
+  "name": "Game Center Mobile",
+  "description": "Mobile iOS-style Game Center web app to install, organize, and play standalone HTML games with offline IndexedDB storage.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
