@@ -1,6 +1,7 @@
-import { RemoteControllerCommand } from '../types/airplay';
+import { RemoteControllerCommand, TVSharedState } from '../types/airplay';
 
 type AirPlayListener = (isCasting: boolean) => void;
+type TVStateListener = (state: TVSharedState) => void;
 
 class NativeAirPlayService {
   private videoElement: HTMLVideoElement | null = null;
@@ -9,14 +10,27 @@ class NativeAirPlayService {
   private isCasting: boolean = false;
   private sessionId: string = 'airplay-session';
   private listeners: Set<AirPlayListener> = new Set();
+  private stateListeners: Set<TVStateListener> = new Set();
   private isInitialized: boolean = false;
+
+  private tvState: TVSharedState = {
+    mode: 'catalog',
+    activeGameId: null,
+    activeGameTitle: null,
+    focusedIndex: 0,
+    category: 'All',
+    totalGames: 332,
+  };
 
   constructor() {
     if (typeof window !== 'undefined') {
       try {
         this.broadcastChannel = new BroadcastChannel('airplay_game_channel');
+        this.broadcastChannel.onmessage = (event) => {
+          this.handleIncomingCommand(event.data);
+        };
       } catch (e) {}
-      // Initialize on DOM ready
+
       if (document.readyState === 'complete' || document.readyState === 'interactive') {
         this.init();
       } else {
@@ -74,11 +88,9 @@ class NativeAirPlayService {
     // Remote Playback API listeners for standard modern browsers
     if ((video as any).remote) {
       (video as any).remote.addEventListener('connect', () => {
-        console.log('[Remote Playback Connected]');
         this.setIsCasting(true);
       });
       (video as any).remote.addEventListener('disconnect', () => {
-        console.log('[Remote Playback Disconnected]');
         this.setIsCasting(false);
       });
     }
@@ -126,7 +138,9 @@ class NativeAirPlayService {
       } catch (e) {}
     }
 
-    return false;
+    // 4. Also enable casting state so user can pair with TV screen immediately
+    this.setIsCasting(true);
+    return true;
   }
 
   public setIsCasting(active: boolean) {
@@ -135,6 +149,8 @@ class NativeAirPlayService {
 
     if (active) {
       this.initWebSocket();
+      // Request TV current state
+      this.sendCommand({ type: 'REQUEST_SYNC' });
     } else {
       if (this.ws) {
         try {
@@ -155,6 +171,30 @@ class NativeAirPlayService {
     };
   }
 
+  public subscribeTVState(cb: TVStateListener) {
+    this.stateListeners.add(cb);
+    cb(this.tvState);
+    return () => {
+      this.stateListeners.delete(cb);
+    };
+  }
+
+  public getTVState(): TVSharedState {
+    return this.tvState;
+  }
+
+  public updateTVState(partial: Partial<TVSharedState>, broadcast = true) {
+    this.tvState = { ...this.tvState, ...partial };
+    this.stateListeners.forEach((cb) => cb(this.tvState));
+
+    if (broadcast) {
+      this.sendCommand({
+        type: 'SYNC_TV_STATE',
+        tvState: this.tvState,
+      });
+    }
+  }
+
   public getIsCasting(): boolean {
     return this.isCasting;
   }
@@ -162,6 +202,34 @@ class NativeAirPlayService {
   public disconnect() {
     this.sendCommand({ type: 'DISCONNECT' });
     this.setIsCasting(false);
+  }
+
+  // Navigation commands for browsing games on TV
+  public navigate(direction: 'up' | 'down' | 'left' | 'right') {
+    this.sendCommand({
+      type: 'NAVIGATE',
+      direction,
+    });
+  }
+
+  public selectGame(gameId?: string) {
+    this.sendCommand({
+      type: 'SELECT_GAME',
+      gameId,
+    });
+  }
+
+  public exitGameToCatalog() {
+    this.sendCommand({
+      type: 'EXIT_GAME',
+    });
+  }
+
+  public setCategory(category: string) {
+    this.sendCommand({
+      type: 'SET_CATEGORY',
+      category,
+    });
   }
 
   // Send real-time remote controller touch/gesture/key commands to the game on the TV
@@ -187,6 +255,16 @@ class NativeAirPlayService {
     }
   }
 
+  private handleIncomingCommand(cmd: RemoteControllerCommand) {
+    if (!cmd) return;
+
+    if (cmd.type === 'SYNC_TV_STATE' && cmd.tvState) {
+      this.updateTVState(cmd.tvState, false);
+    } else if (cmd.type === 'DISCONNECT') {
+      this.setIsCasting(false);
+    }
+  }
+
   private initWebSocket() {
     if (this.ws && this.ws.readyState === WebSocket.OPEN) return;
 
@@ -194,6 +272,13 @@ class NativeAirPlayService {
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
       const wsUrl = `${protocol}//${window.location.host}/ws/airplay?session=${encodeURIComponent(this.sessionId)}&role=controller`;
       this.ws = new WebSocket(wsUrl);
+
+      this.ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          this.handleIncomingCommand(data);
+        } catch (e) {}
+      };
     } catch (err) {}
   }
 }
