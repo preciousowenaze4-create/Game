@@ -6,13 +6,15 @@ import {
   CheckCircle2,
   Loader2,
   FileCode2,
-  Lock,
-  ShieldCheck,
   Sparkles,
+  Smartphone,
+  Image as ImageIcon,
+  FolderArchive,
+  Flame,
+  Zap,
 } from 'lucide-react';
 import { GameItem } from '../types/game';
 import { validateAndInstallGameFile } from '../utils/apkExtractor';
-import { useAuth } from '../context/AuthContext';
 
 interface GameUploaderProps {
   onGameAdded: (game: GameItem) => void;
@@ -24,7 +26,6 @@ export const GameUploader: React.FC<GameUploaderProps> = ({
   onDownloadStarted,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { user, isAuthenticated, openLoginModal } = useAuth();
   const [isDragging, setIsDragging] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [installProgress, setInstallProgress] = useState<number>(0);
@@ -32,28 +33,18 @@ export const GameUploader: React.FC<GameUploaderProps> = ({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
+  // Directly open system file picker - no login required!
   const handleTriggerUpload = () => {
-    // Restrict upload: user must be authenticated with Firebase Google Login
-    if (!isAuthenticated) {
-      openLoginModal();
-      return;
-    }
-
     setErrorMessage(null);
     fileInputRef.current?.click();
   };
 
   const processFile = async (file: File) => {
-    if (!isAuthenticated) {
-      openLoginModal();
-      return;
-    }
-
     setIsProcessing(true);
     setErrorMessage(null);
     setSuccessMessage(null);
-    setInstallProgress(5);
-    setStepDescription('Inspecting file contents...');
+    setInstallProgress(10);
+    setStepDescription('Reading file contents...');
     onDownloadStarted?.(file.name, file.size);
 
     try {
@@ -63,7 +54,8 @@ export const GameUploader: React.FC<GameUploaderProps> = ({
       });
 
       onGameAdded(installedGame);
-      setSuccessMessage(`"${installedGame.title}" successfully uploaded to Supabase & installed!`);
+      setSuccessMessage(`"${installedGame.title}" successfully installed and ready to play!`);
+
       setTimeout(() => {
         setSuccessMessage(null);
         setIsProcessing(false);
@@ -72,7 +64,7 @@ export const GameUploader: React.FC<GameUploaderProps> = ({
       }, 2500);
     } catch (err: any) {
       console.error('File verification error:', err);
-      const msg = err?.message || 'Upload failed. Please check your file and internet connection.';
+      const msg = err?.message || 'Upload could not be processed. Please check file format.';
       setErrorMessage(msg);
       setIsProcessing(false);
       setInstallProgress(0);
@@ -90,9 +82,7 @@ export const GameUploader: React.FC<GameUploaderProps> = ({
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
-    if (isAuthenticated) {
-      setIsDragging(true);
-    }
+    setIsDragging(true);
   };
 
   const handleDragLeave = (e: React.DragEvent) => {
@@ -103,190 +93,176 @@ export const GameUploader: React.FC<GameUploaderProps> = ({
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
-    if (!isAuthenticated) {
-      openLoginModal();
-      return;
-    }
     const file = e.dataTransfer.files?.[0];
     if (file) {
       processFile(file);
     }
   };
 
+  // Quick Demo Game generator for immediate 1-click test
+  const handleInstallDemoGame = () => {
+    const htmlDemo = `<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<style>
+  body { margin: 0; background: #0a0507; color: #fff; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; text-align: center; }
+  h1 { font-size: 28px; color: #ef4444; margin-bottom: 8px; text-shadow: 0 0 20px rgba(239,68,68,0.5); }
+  p { color: #fca5a5; font-size: 14px; max-width: 300px; margin-bottom: 24px; }
+  .btn { padding: 14px 28px; background: linear-gradient(135deg, #ef4444, #991b1b); color: #fff; border: none; border-radius: 16px; font-weight: bold; font-size: 16px; cursor: pointer; box-shadow: 0 10px 25px rgba(239,68,68,0.4); }
+  .score { font-size: 48px; font-weight: 900; color: #fff; margin: 16px 0; }
+</style>
+</head>
+<body>
+  <h1>RED SPEED RACER</h1>
+  <p>Tap the turbo button to speed up!</p>
+  <div class="score" id="score">0 MPH</div>
+  <button class="btn" onclick="speedUp()">TAP FOR NITRO</button>
+  <script>
+    let speed = 0;
+    function speedUp() {
+      speed += 15;
+      document.getElementById('score').innerText = speed + ' MPH';
+    }
+  </script>
+</body>
+</html>`;
+
+    const blob = new Blob([htmlDemo], { type: 'text/html' });
+    const file = new File([blob], 'Red-Speed-Racer.html', { type: 'text/html' });
+    processFile(file);
+  };
+
   return (
-    <div className="my-2">
+    <div className="my-2 space-y-3">
       {/* Accepts all requested formats without restriction: APK, IPA, ZIP, HTML, PNG, JPG, GLB/GLTF */}
       <input
         ref={fileInputRef}
         type="file"
         onChange={onFileInputChange}
         className="hidden"
-        disabled={!isAuthenticated}
       />
 
-      {/* Upload Zone */}
+      {/* Main Drag & Drop Upload Zone in Dark & Crimson Red */}
       <div
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         onClick={handleTriggerUpload}
-        className={`group relative overflow-hidden rounded-3xl p-6 border transition-all duration-200 cursor-pointer ${
-          !isAuthenticated
-            ? 'bg-[#111420]/80 hover:bg-[#141827] border-amber-500/20 hover:border-amber-500/40 shadow-lg shadow-black/40'
-            : isDragging
-            ? 'bg-indigo-950/40 border-indigo-500 scale-[0.99] ring-2 ring-indigo-500/30'
-            : 'bg-[#111420] hover:bg-[#141827] border-white/10 hover:border-white/20 shadow-lg shadow-black/40'
+        className={`group relative overflow-hidden rounded-3xl p-6 sm:p-8 border transition-all duration-300 cursor-pointer ${
+          isDragging
+            ? 'bg-red-950/40 border-red-500 scale-[0.99] ring-2 ring-red-500/50 shadow-2xl shadow-red-900/50'
+            : 'bg-[#12070a] hover:bg-[#19090e] border-red-900/40 hover:border-red-500/60 shadow-xl shadow-black/80'
         }`}
       >
-        <div className="relative flex flex-col items-center text-center">
-          {!isAuthenticated ? (
-            /* Locked State for Unauthenticated Users */
-            <>
-              <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 group-hover:scale-105 transition-transform mb-3 shadow-md shadow-amber-500/10">
-                <Lock className="w-8 h-8" />
-              </div>
+        {/* Subtle Ambient Red Glow in background */}
+        <div className="absolute -top-16 -right-16 w-48 h-48 bg-red-600/10 rounded-full blur-3xl pointer-events-none group-hover:bg-red-600/20 transition-colors" />
 
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-300 text-[11px] font-semibold mb-2 border border-amber-500/20">
-                <ShieldCheck className="w-3.5 h-3.5" />
-                <span>Authentication Required</span>
-              </div>
+        <div className="relative z-10 flex flex-col items-center text-center space-y-3">
+          {/* Glowing Red Icon */}
+          <div className="relative flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-tr from-red-600 via-rose-600 to-red-800 text-white shadow-xl shadow-red-600/40 border border-red-400/30 group-hover:scale-105 transition-transform duration-300">
+            {isProcessing ? (
+              <Loader2 className="w-8 h-8 animate-spin" />
+            ) : (
+              <UploadCloud className="w-8 h-8" />
+            )}
+            <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-red-400 animate-ping" />
+          </div>
 
-              <h2 className="text-base font-bold text-white tracking-tight mb-1">
-                Sign in with Google to Upload Files
-              </h2>
-              <p className="text-xs text-slate-400 max-w-sm mb-4 leading-relaxed">
-                Uploads to Supabase storage are protected by Firebase Authentication. Please sign in with Google to upload APKs, IPAs, HTML5 games, and media.
-              </p>
+          <div>
+            <h3 className="text-base sm:text-lg font-black text-white tracking-tight flex items-center justify-center gap-2">
+              <span>Install &amp; Upload Game File</span>
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-red-500/20 text-red-300 border border-red-500/40 font-bold uppercase">
+                Free &amp; Direct
+              </span>
+            </h3>
+            <p className="text-xs text-red-200/70 mt-1 max-w-sm mx-auto">
+              Tap here or drag &amp; drop any file. Instantly playable inside the app with zero login required.
+            </p>
+          </div>
 
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  openLoginModal();
-                }}
-                className="inline-flex items-center gap-2.5 px-6 py-2.5 rounded-xl bg-white hover:bg-slate-100 text-slate-900 font-bold text-xs shadow-lg shadow-white/5 active:scale-95 transition-all cursor-pointer"
-              >
-                {/* SVG Google 'G' Logo */}
-                <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
-                  <path
-                    fill="#4285F4"
-                    d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"
-                  />
-                  <path
-                    fill="#34A853"
-                    d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"
-                  />
-                  <path
-                    fill="#FBBC05"
-                    d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.99 0 12s.45 3.82 1.25 5.42l4.03-3.15z"
-                  />
-                  <path
-                    fill="#EA4335"
-                    d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
-                  />
-                </svg>
-                <span>Sign in with Google</span>
-              </button>
-            </>
-          ) : (
-            /* Unlocked State for Authenticated Users */
-            <>
-              <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 group-hover:scale-105 transition-transform mb-3">
-                {isProcessing ? (
-                  <Loader2 className="w-8 h-8 animate-spin text-indigo-400" />
-                ) : (
-                  <UploadCloud className="w-8 h-8" />
-                )}
-              </div>
+          {/* Supported Format Pills */}
+          <div className="flex flex-wrap items-center justify-center gap-1.5 pt-1">
+            <span className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-red-950/60 border border-red-800/40 text-[11px] font-bold text-red-200">
+              <Smartphone className="w-3 h-3 text-red-400" />
+              <span>APK &amp; IPA</span>
+            </span>
+            <span className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-red-950/60 border border-red-800/40 text-[11px] font-bold text-red-200">
+              <FolderArchive className="w-3 h-3 text-red-400" />
+              <span>HTML5 &amp; ZIP</span>
+            </span>
+            <span className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-red-950/60 border border-red-800/40 text-[11px] font-bold text-red-200">
+              <ImageIcon className="w-3 h-3 text-red-400" />
+              <span>Pictures</span>
+            </span>
+            <span className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-red-950/60 border border-red-800/40 text-[11px] font-bold text-red-200">
+              <Zap className="w-3 h-3 text-red-400" />
+              <span>3D Models</span>
+            </span>
+          </div>
 
-              {/* User Identity Pill */}
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300 text-[11px] font-semibold mb-2 border border-emerald-500/20">
-                <CheckCircle2 className="w-3 h-3 text-emerald-400" />
-                <span className="truncate max-w-[200px]">Unlocked as {user?.email}</span>
-              </div>
-
-              <h2 className="text-base font-bold text-white tracking-tight mb-1">
-                Install Game, App, or Media File
-              </h2>
-              <p className="text-xs text-slate-400 max-w-sm mb-4 leading-relaxed">
-                Upload any file from your device: <span className="text-amber-300 font-mono">.apk</span>,{' '}
-                <span className="text-sky-300 font-mono">.ipa</span>,{' '}
-                <span className="text-indigo-300 font-mono">.html</span>,{' '}
-                <span className="text-indigo-300 font-mono">.zip</span>,{' '}
-                <span className="text-emerald-300 font-mono">.png/.jpg</span>, or{' '}
-                <span className="text-cyan-300 font-mono">.glb</span>.
-                Files are stored directly in your Supabase <span className="font-mono text-slate-200">game-files</span> bucket.
-              </p>
-
-              {isProcessing ? (
-                <div className="w-full max-w-xs my-2 p-3.5 rounded-2xl bg-[#090a10] border border-white/10 text-left space-y-2">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-slate-300 font-medium flex items-center gap-1.5 truncate max-w-[200px]">
-                      <FileCode2 className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
-                      <span className="truncate">{stepDescription || 'Uploading to Supabase...'}</span>
-                    </span>
-                    <span className="text-indigo-400 font-bold tabular-nums shrink-0">{installProgress}%</span>
-                  </div>
-                  <div className="w-full h-2.5 bg-white/10 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-emerald-400 rounded-full transition-all duration-200"
-                      style={{ width: `${installProgress}%` }}
-                    />
-                  </div>
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleTriggerUpload();
-                  }}
-                  className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white font-semibold text-xs shadow-md shadow-indigo-600/30 transition-all cursor-pointer"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>Choose File from Device</span>
-                </button>
-              )}
-            </>
-          )}
-
-          {/* Quick file format pills */}
-          <div className="flex items-center gap-1.5 mt-4 text-[11px] text-slate-400 flex-wrap justify-center">
-            <span className="px-2 py-0.5 rounded-md bg-white/5 border border-white/5">Android APK</span>
-            <span className="px-2 py-0.5 rounded-md bg-white/5 border border-white/5">iOS IPA</span>
-            <span className="px-2 py-0.5 rounded-md bg-white/5 border border-white/5">HTML5 Web Game</span>
-            <span className="px-2 py-0.5 rounded-md bg-white/5 border border-white/5">Photos & Art</span>
-            <span className="px-2 py-0.5 rounded-md bg-white/5 border border-white/5">3D GLB/GLTF</span>
+          {/* Action Trigger Button */}
+          <div className="pt-2">
+            <button
+              type="button"
+              className="px-6 py-2.5 rounded-2xl bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-black text-xs shadow-lg shadow-red-600/40 flex items-center gap-2 group-hover:scale-105 active:scale-95 transition-all"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Choose File from Device</span>
+            </button>
           </div>
         </div>
 
-        {/* Error Notification */}
-        {errorMessage && (
-          <div className="mt-4 p-3.5 rounded-2xl bg-rose-950/70 border border-rose-500/40 text-rose-300 text-xs flex items-center justify-between gap-2.5 animate-in fade-in">
-            <div className="flex items-center gap-2.5">
-              <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
-              <span className="font-medium">{errorMessage}</span>
+        {/* Live Progress Bar when uploading */}
+        {isProcessing && (
+          <div className="mt-5 space-y-2 relative z-10 pt-3 border-t border-red-900/30">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-red-200 font-semibold flex items-center gap-1.5">
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-red-400" />
+                <span>{stepDescription || 'Installing file...'}</span>
+              </span>
+              <span className="font-mono text-white font-bold">{installProgress}%</span>
             </div>
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleTriggerUpload();
-              }}
-              className="px-2.5 py-1 bg-rose-500/20 hover:bg-rose-500/30 rounded-lg text-rose-200 text-[11px] font-bold"
-            >
-              Retry
-            </button>
+            <div className="w-full h-2.5 bg-black/60 rounded-full overflow-hidden border border-red-900/40 p-0.5">
+              <div
+                className="h-full bg-gradient-to-r from-red-600 via-rose-500 to-red-400 rounded-full transition-all duration-200"
+                style={{ width: `${Math.max(5, installProgress)}%` }}
+              />
+            </div>
           </div>
         )}
 
-        {/* Success Notification */}
+        {/* Success Alert */}
         {successMessage && (
-          <div className="mt-4 p-3.5 rounded-2xl bg-emerald-950/70 border border-emerald-500/40 text-emerald-300 text-xs flex items-center gap-2.5 animate-in fade-in">
+          <div className="mt-4 p-3 rounded-2xl bg-red-950/80 border border-red-500/50 text-white text-xs flex items-center gap-2.5 animate-in fade-in">
             <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-            <span className="font-medium">{successMessage}</span>
+            <span className="font-bold">{successMessage}</span>
           </div>
         )}
+
+        {/* Error Alert */}
+        {errorMessage && (
+          <div className="mt-4 p-3 rounded-2xl bg-red-950/80 border border-red-500 text-white text-xs flex items-center gap-2.5 animate-in fade-in">
+            <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
+            <span className="font-medium">{errorMessage}</span>
+          </div>
+        )}
+      </div>
+
+      {/* Quick 1-Click Demo File Test Option */}
+      <div className="flex items-center justify-between p-3 rounded-2xl bg-[#14080c] border border-red-900/30 text-xs">
+        <div className="flex items-center gap-2 text-red-200/80">
+          <Sparkles className="w-3.5 h-3.5 text-red-400" />
+          <span>Want to test upload right now?</span>
+        </div>
+        <button
+          type="button"
+          onClick={handleInstallDemoGame}
+          disabled={isProcessing}
+          className="px-3 py-1.5 rounded-xl bg-red-600/30 hover:bg-red-600 border border-red-500/40 hover:border-red-400 text-white font-bold text-[11px] transition-all cursor-pointer active:scale-95"
+        >
+          Install Demo Game
+        </button>
       </div>
     </div>
   );

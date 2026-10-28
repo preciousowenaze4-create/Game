@@ -257,12 +257,12 @@ export const GamePlayer: React.FC<GamePlayerProps> = ({ game, onExit, onOpenAirP
               onClick={() => setIsLandscapeForced((prev) => !prev)}
               className={`p-2 rounded-full border backdrop-blur-xl transition-all cursor-pointer flex items-center gap-1.5 px-3 text-xs font-bold ${
                 isLandscapeForced
-                  ? 'bg-indigo-600/90 text-white border-indigo-400'
-                  : 'bg-black/60 hover:bg-black/90 text-slate-300 hover:text-white border-white/15'
+                  ? 'bg-red-600/90 text-white border-red-400 shadow-lg shadow-red-600/40'
+                  : 'bg-black/60 hover:bg-black/90 text-red-200/80 hover:text-white border-red-900/30'
               }`}
               title="Toggle Full-Screen Landscape View"
             >
-              <RotateCw className="w-3.5 h-3.5 text-indigo-300" />
+              <RotateCw className="w-3.5 h-3.5 text-red-300" />
               <span>{isLandscapeForced ? 'Portrait' : 'Landscape'}</span>
             </button>
 
@@ -270,18 +270,18 @@ export const GamePlayer: React.FC<GamePlayerProps> = ({ game, onExit, onOpenAirP
             {onOpenAirPlay && (
               <button
                 onClick={onOpenAirPlay}
-                className="p-2 rounded-full bg-black/60 hover:bg-black/90 text-slate-300 hover:text-white border border-white/15 backdrop-blur-xl transition-all cursor-pointer flex items-center gap-1.5 px-3 text-xs font-bold"
+                className="p-2 rounded-full bg-black/60 hover:bg-black/90 text-red-200 hover:text-white border border-red-900/30 backdrop-blur-xl transition-all cursor-pointer flex items-center gap-1.5 px-3 text-xs font-bold"
                 title="Cast Game to Apple TV via AirPlay"
               >
-                <Tv className="w-3.5 h-3.5 text-indigo-400" />
+                <Tv className="w-3.5 h-3.5 text-red-400" />
                 <span>AirPlay</span>
               </button>
             )}
           </div>
 
-          {/* Loading Indicator */}
+          {/* Loading Indicator in Dark & Red */}
           {!isIframeLoaded && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-[#06070e] z-20">
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-[#0a0406] z-20">
               {coverUrl ? (
                 <img
                   src={coverUrl}

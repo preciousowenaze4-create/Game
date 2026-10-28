@@ -142,7 +142,7 @@ export const DownloadsManager: React.FC<DownloadsManagerProps> = ({
           <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
             <span>Download Engine</span>
             {activeDownloadingCount > 0 && (
-              <span className="px-2 py-0.2 rounded-full bg-indigo-500/20 text-indigo-300 text-[10px] animate-pulse">
+              <span className="px-2 py-0.2 rounded-full bg-red-500/20 text-red-300 text-[10px] animate-pulse">
                 {activeDownloadingCount} Active
               </span>
             )}
@@ -152,12 +152,12 @@ export const DownloadsManager: React.FC<DownloadsManagerProps> = ({
           </p>
         </div>
 
-        <div className="flex items-center p-0.5 rounded-xl bg-white/5 border border-white/5 text-xs">
+        <div className="flex items-center p-0.5 rounded-xl bg-black/40 border border-red-950/60 text-xs">
           <button
             onClick={() => setActiveTab('tasks')}
             className={`px-3 py-1 rounded-lg font-semibold transition-all cursor-pointer ${
               activeTab === 'tasks'
-                ? 'bg-indigo-600 text-white shadow-sm'
+                ? 'bg-gradient-to-r from-red-600 to-rose-600 text-white shadow-sm'
                 : 'text-slate-400 hover:text-white'
             }`}
           >
@@ -167,7 +167,7 @@ export const DownloadsManager: React.FC<DownloadsManagerProps> = ({
             onClick={() => setActiveTab('library')}
             className={`px-3 py-1 rounded-lg font-semibold transition-all cursor-pointer ${
               activeTab === 'library'
-                ? 'bg-indigo-600 text-white shadow-sm'
+                ? 'bg-gradient-to-r from-red-600 to-rose-600 text-white shadow-sm'
                 : 'text-slate-400 hover:text-white'
             }`}
           >
@@ -180,8 +180,8 @@ export const DownloadsManager: React.FC<DownloadsManagerProps> = ({
       {activeTab === 'tasks' && (
         <div className="space-y-3">
           {downloadTasks.length === 0 ? (
-            <div className="p-8 text-center rounded-3xl bg-[#111420] border border-white/5 space-y-3">
-              <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 mx-auto">
+            <div className="p-8 text-center rounded-3xl bg-[#12070a] border border-red-950/60 space-y-3 shadow-lg shadow-black/40">
+              <div className="w-12 h-12 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-400 mx-auto">
                 <HardDriveDownload className="w-6 h-6" />
               </div>
               <div>
@@ -193,7 +193,7 @@ export const DownloadsManager: React.FC<DownloadsManagerProps> = ({
               {downloadedItems.length > 0 && (
                 <button
                   onClick={() => setActiveTab('library')}
-                  className="px-4 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-white text-xs font-semibold border border-white/10 cursor-pointer"
+                  className="px-4 py-1.5 rounded-xl bg-red-950/40 hover:bg-red-900/50 text-white text-xs font-semibold border border-red-800/40 cursor-pointer"
                 >
                   View Installed Games
                 </button>
@@ -210,7 +210,7 @@ export const DownloadsManager: React.FC<DownloadsManagerProps> = ({
                 return (
                   <div
                     key={task.id}
-                    className="p-4 bg-[#111420] hover:bg-[#141827] border border-white/10 rounded-2xl space-y-3 shadow-md"
+                    className="p-4 bg-[#12070a] hover:bg-[#1c0d12] border border-red-950/60 hover:border-red-600/40 rounded-2xl space-y-3 shadow-md transition-all"
                   >
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-3 min-w-0">
@@ -220,7 +220,7 @@ export const DownloadsManager: React.FC<DownloadsManagerProps> = ({
                           ) : task.fileType === 'picture' ? (
                             <ImageIcon className="w-5 h-5 text-emerald-400" />
                           ) : (
-                            <Smartphone className="w-5 h-5 text-indigo-400" />
+                            <Smartphone className="w-5 h-5 text-red-400" />
                           )}
                         </div>
 
@@ -232,8 +232,8 @@ export const DownloadsManager: React.FC<DownloadsManagerProps> = ({
 
                             {/* Status badge */}
                             {isDownloading && (
-                              <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 flex items-center gap-1 animate-pulse">
-                                <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-ping" />
+                              <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-red-500/20 text-red-300 border border-red-500/30 flex items-center gap-1 animate-pulse">
+                                <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-ping" />
                                 Downloading
                               </span>
                             )}
@@ -265,7 +265,7 @@ export const DownloadsManager: React.FC<DownloadsManagerProps> = ({
                             {task.totalChunks > 1 && (
                               <>
                                 <span className="text-slate-600">·</span>
-                                <span className="text-indigo-400 text-[10px]">
+                                <span className="text-red-400 text-[10px]">
                                   {task.completedChunks.length}/{task.totalChunks} chunks
                                 </span>
                               </>
@@ -290,7 +290,7 @@ export const DownloadsManager: React.FC<DownloadsManagerProps> = ({
                         {isPaused && (
                           <button
                             onClick={() => handleResume(task)}
-                            className="p-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold flex items-center gap-1 shadow-md transition-all cursor-pointer"
+                            className="p-2 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white text-xs font-semibold flex items-center gap-1 shadow-md transition-all cursor-pointer"
                             title="Resume download from where it stopped"
                           >
                             <Play className="w-3.5 h-3.5 fill-current" />
@@ -347,7 +347,7 @@ export const DownloadsManager: React.FC<DownloadsManagerProps> = ({
                               ? 'bg-amber-400'
                               : isFailed
                               ? 'bg-rose-500'
-                              : 'bg-gradient-to-r from-indigo-500 via-purple-500 to-emerald-400'
+                              : 'bg-gradient-to-r from-red-600 via-rose-500 to-red-400'
                           }`}
                           style={{ width: `${task.progress}%` }}
                         />
@@ -365,8 +365,8 @@ export const DownloadsManager: React.FC<DownloadsManagerProps> = ({
       {activeTab === 'library' && (
         <div className="space-y-2">
           {downloadedItems.length === 0 ? (
-            <div className="p-8 text-center rounded-2xl bg-[#111420] border border-white/5">
-              <Download className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+            <div className="p-8 text-center rounded-2xl bg-[#12070a] border border-red-950/60 shadow-md">
+              <Download className="w-8 h-8 text-red-900/60 mx-auto mb-2" />
               <p className="text-xs text-slate-400 font-medium">No downloaded files yet</p>
               <p className="text-[11px] text-slate-500 mt-1">
                 Upload an APK, IPA, HTML game, picture, or 3D model to see it here immediately.
@@ -380,13 +380,13 @@ export const DownloadsManager: React.FC<DownloadsManagerProps> = ({
               return (
                 <div
                   key={item.id}
-                  className="p-3.5 bg-[#111420] hover:bg-[#141827] border border-white/5 hover:border-white/10 rounded-2xl transition-all flex items-center justify-between gap-3 shadow-sm"
+                  className="p-3.5 bg-[#12070a] hover:bg-[#1c0d12] border border-red-950/60 hover:border-red-600/40 rounded-2xl transition-all flex items-center justify-between gap-3 shadow-md shadow-black/40"
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <div
                       className={`w-12 h-12 rounded-xl bg-gradient-to-tr ${
-                        item.accentGradient || 'from-indigo-600 to-purple-800'
-                      } flex items-center justify-center shrink-0 shadow-md ring-1 ring-white/10 overflow-hidden cursor-pointer`}
+                        item.accentGradient || 'from-red-600 to-rose-800'
+                      } flex items-center justify-center shrink-0 shadow-md ring-1 ring-red-500/20 overflow-hidden cursor-pointer`}
                       onClick={() => onPlay(item)}
                     >
                       {(() => {
@@ -418,7 +418,7 @@ export const DownloadsManager: React.FC<DownloadsManagerProps> = ({
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
                         <h4
-                          className="text-xs font-bold text-white truncate cursor-pointer hover:text-indigo-300"
+                          className="text-xs font-bold text-white truncate cursor-pointer hover:text-red-400"
                           onClick={() => onPlay(item)}
                         >
                           {item.title}
@@ -444,7 +444,7 @@ export const DownloadsManager: React.FC<DownloadsManagerProps> = ({
                       className="p-2 rounded-xl text-slate-300 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 transition-colors cursor-pointer"
                       title="Download with Resumable Chunk Manager"
                     >
-                      <HardDriveDownload className="w-3.5 h-3.5 text-indigo-400" />
+                      <HardDriveDownload className="w-3.5 h-3.5 text-red-400" />
                     </button>
 
                     {/* Direct Device Save */}
@@ -473,7 +473,7 @@ export const DownloadsManager: React.FC<DownloadsManagerProps> = ({
                           ? 'bg-emerald-600 hover:bg-emerald-500'
                           : item.fileType === '3d'
                           ? 'bg-cyan-600 hover:bg-cyan-500'
-                          : 'bg-indigo-600 hover:bg-indigo-500'
+                          : 'bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500'
                       }`}
                     >
                       <Play className="w-3 h-3 fill-current" />
@@ -498,9 +498,9 @@ export const DownloadsManager: React.FC<DownloadsManagerProps> = ({
 
       {/* Package / File Details Modal */}
       {selectedItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in">
-          <div className="w-full max-w-sm bg-[#111420] border border-white/10 rounded-2xl p-5 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between pb-2 border-b border-white/10">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-in fade-in">
+          <div className="w-full max-w-sm bg-[#12070a] border border-red-900/60 rounded-2xl p-5 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between pb-2 border-b border-red-950/60">
               <div className="flex items-center gap-2.5">
                 {selectedItem.fileType === 'picture' ? (
                   <ImageIcon className="w-5 h-5 text-emerald-400" />
@@ -509,7 +509,7 @@ export const DownloadsManager: React.FC<DownloadsManagerProps> = ({
                 ) : selectedItem.fileType === '3d' ? (
                   <Box className="w-5 h-5 text-cyan-400" />
                 ) : (
-                  <Smartphone className="w-5 h-5 text-indigo-400" />
+                  <Smartphone className="w-5 h-5 text-red-400" />
                 )}
                 <h3 className="text-sm font-bold text-white">Installed File Details</h3>
               </div>
@@ -522,7 +522,7 @@ export const DownloadsManager: React.FC<DownloadsManagerProps> = ({
             </div>
 
             <div className="space-y-2 text-xs">
-              <div className="p-2.5 rounded-xl bg-[#090a10] border border-white/5">
+              <div className="p-2.5 rounded-xl bg-[#090305] border border-red-950/40">
                 <div className="text-[11px] text-slate-500">File Name & Identifier</div>
                 <div className="text-white font-mono break-all font-semibold">
                   {selectedItem.apkDetails?.packageName || selectedItem.filename}
@@ -530,13 +530,13 @@ export const DownloadsManager: React.FC<DownloadsManagerProps> = ({
               </div>
 
               <div className="grid grid-cols-2 gap-2">
-                <div className="p-2.5 rounded-xl bg-[#090a10] border border-white/5">
+                <div className="p-2.5 rounded-xl bg-[#090305] border border-red-950/40">
                   <div className="text-[11px] text-slate-500">File Type</div>
                   <div className="text-white font-semibold uppercase">
                     {selectedItem.fileType}
                   </div>
                 </div>
-                <div className="p-2.5 rounded-xl bg-[#090a10] border border-white/5">
+                <div className="p-2.5 rounded-xl bg-[#090305] border border-red-950/40">
                   <div className="text-[11px] text-slate-500">File Size</div>
                   <div className="text-white font-semibold">
                     {formatBytes(selectedItem.fileSize)}
@@ -545,7 +545,7 @@ export const DownloadsManager: React.FC<DownloadsManagerProps> = ({
               </div>
 
               {selectedItem.storageUrl && (
-                <div className="p-2.5 rounded-xl bg-[#090a10] border border-white/5">
+                <div className="p-2.5 rounded-xl bg-[#090305] border border-red-950/40">
                   <div className="text-[11px] text-slate-500">Supabase Storage URL</div>
                   <div className="text-emerald-400 font-mono text-[10px] truncate">
                     {selectedItem.storageUrl}
@@ -573,7 +573,7 @@ export const DownloadsManager: React.FC<DownloadsManagerProps> = ({
                   setSelectedItem(null);
                   onPlay(item);
                 }}
-                className="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 shadow-lg transition-all cursor-pointer"
+                className="flex-1 py-2.5 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-red-950/60 transition-all cursor-pointer"
               >
                 <Play className="w-3.5 h-3.5 fill-current" />
                 <span>Preview / Play</span>

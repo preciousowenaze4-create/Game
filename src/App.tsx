@@ -32,7 +32,6 @@ import { GamePlayer } from './components/GamePlayer';
 import { DownloadsManager } from './components/DownloadsManager';
 import { StandaloneExportModal } from './components/StandaloneExportModal';
 import { EditGameModal } from './components/EditGameModal';
-import { GoogleLoginModal } from './components/GoogleLoginModal';
 import { TransferProgressTracker } from './components/TransferProgressTracker';
 import { BossGameCatalog } from './components/BossGameCatalog';
 import { AirPlayRemoteController } from './components/AirPlayRemoteController';
@@ -226,7 +225,7 @@ export default function App() {
   const categories = ['All', 'Android APK', 'iOS IPA', 'HTML5', 'Pictures', '3D Models'];
 
   return (
-    <div className="min-h-screen bg-[#07080d] text-slate-100 flex flex-col items-center justify-start overflow-x-hidden selection:bg-indigo-500/30 selection:text-white">
+    <div className="min-h-screen bg-[#080305] text-red-50 flex flex-col items-center justify-start overflow-x-hidden selection:bg-red-600/40 selection:text-white">
       {/* 
         AIRPLAY WIRELESS REMOTE CONTROLLER:
         The moment the native iOS AirPlay session becomes active, the app interface on the iPhone 
@@ -263,29 +262,29 @@ export default function App() {
             onOpenAirPlayModal={handleTriggerAirPlay}
           />
 
-          {/* Navigation Tabs */}
-          <div className="grid grid-cols-4 gap-1 p-1 my-3 bg-[#111420] rounded-xl border border-white/10">
+          {/* Navigation Tabs in Vibrant Red & Dark Theme */}
+          <div className="grid grid-cols-4 gap-1 p-1.5 my-3 bg-[#13070b] rounded-2xl border border-red-950/80 shadow-xl shadow-black/80">
             <button
               onClick={() => setActiveTab('arcade')}
-              className={`py-2 px-2 text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+              className={`py-2 px-2 text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                 activeTab === 'arcade'
-                  ? 'bg-indigo-600 text-white shadow-sm'
-                  : 'text-slate-400 hover:text-white hover:bg-white/5'
+                  ? 'bg-gradient-to-r from-red-600 to-rose-600 text-white shadow-lg shadow-red-600/40'
+                  : 'text-red-200/70 hover:text-white hover:bg-red-950/40'
               }`}
             >
               <Flame className="w-3.5 h-3.5 text-amber-400" />
               <span>Arcade</span>
-              <span className="text-[10px] px-1 py-0.2 rounded-full bg-indigo-500/30 text-indigo-200 font-bold">
+              <span className="text-[10px] px-1 py-0.2 rounded-full bg-red-950 text-red-300 font-bold border border-red-700/50">
                 Live
               </span>
             </button>
 
             <button
               onClick={() => setActiveTab('library')}
-              className={`py-2 px-2 text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+              className={`py-2 px-2 text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                 activeTab === 'library'
-                  ? 'bg-indigo-600 text-white shadow-sm'
-                  : 'text-slate-400 hover:text-white hover:bg-white/5'
+                  ? 'bg-gradient-to-r from-red-600 to-rose-600 text-white shadow-lg shadow-red-600/40'
+                  : 'text-red-200/70 hover:text-white hover:bg-red-950/40'
               }`}
             >
               <FolderArchive className="w-3.5 h-3.5" />
@@ -295,16 +294,16 @@ export default function App() {
 
             <button
               onClick={() => setActiveTab('downloads')}
-              className={`py-2 px-2 text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+              className={`py-2 px-2 text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                 activeTab === 'downloads'
-                  ? 'bg-indigo-600 text-white shadow-sm'
-                  : 'text-slate-400 hover:text-white hover:bg-white/5'
+                  ? 'bg-gradient-to-r from-red-600 to-rose-600 text-white shadow-lg shadow-red-600/40'
+                  : 'text-red-200/70 hover:text-white hover:bg-red-950/40'
               }`}
             >
               <Download className="w-3.5 h-3.5" />
               <span>Downloads</span>
               {stats.apkCount > 0 && (
-                <span className="text-[10px] px-1 py-0.2 rounded-full bg-amber-500/25 text-amber-300 font-bold">
+                <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-red-500/25 text-red-300 font-bold">
                   {stats.apkCount}
                 </span>
               )}
@@ -312,10 +311,10 @@ export default function App() {
 
             <button
               onClick={() => setActiveTab('install')}
-              className={`py-2 px-2 text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+              className={`py-2 px-2 text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                 activeTab === 'install'
-                  ? 'bg-indigo-600 text-white shadow-sm'
-                  : 'text-slate-400 hover:text-white hover:bg-white/5'
+                  ? 'bg-gradient-to-r from-red-600 to-rose-600 text-white shadow-lg shadow-red-600/40'
+                  : 'text-red-200/70 hover:text-white hover:bg-red-950/40'
               }`}
             >
               <PlusCircle className="w-3.5 h-3.5" />
@@ -466,10 +465,10 @@ export default function App() {
         </div>
       </div>
 
-      {/* Toast Notification */}
+      {/* Toast Notification in Red & Dark Theme */}
       {toastMessage && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full bg-slate-900/95 text-white border border-white/15 text-xs font-medium shadow-2xl backdrop-blur-xl animate-in fade-in slide-in-from-bottom-3 flex items-center gap-2 pointer-events-none">
-          <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-2xl bg-[#18080d]/95 text-red-50 border border-red-700/60 text-xs font-bold shadow-2xl shadow-red-950/80 backdrop-blur-xl animate-in fade-in slide-in-from-bottom-3 flex items-center gap-2 pointer-events-none">
+          <Sparkles className="w-3.5 h-3.5 text-red-400" />
           <span>{toastMessage}</span>
         </div>
       )}
@@ -479,9 +478,6 @@ export default function App() {
         isOpen={isExportModalOpen}
         onClose={() => setIsExportModalOpen(false)}
       />
-
-      {/* Firebase Google Login Modal */}
-      <GoogleLoginModal />
 
       {/* Rename Modal */}
       {editingGame && (

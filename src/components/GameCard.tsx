@@ -108,12 +108,12 @@ export const GameCard: React.FC<GameCardProps> = ({
   const isWebGame = game.fileType === 'html' || (game.fileType === 'zip' && game.apkDetails?.hasEmbeddedHtml);
 
   return (
-    <div className="group relative flex items-center gap-3.5 p-3.5 bg-[#111420] hover:bg-[#141827] border border-white/5 hover:border-white/10 rounded-2xl transition-all duration-150 shadow-md shadow-black/30">
+    <div className="group relative flex items-center gap-3.5 p-3.5 bg-[#12070a] hover:bg-[#1c0d12] border border-red-950/60 hover:border-red-600/40 rounded-2xl transition-all duration-150 shadow-md shadow-black/50">
       {/* Game/Media Thumbnail with actual image or app icon */}
       <div
         className={`w-14 h-14 rounded-2xl bg-gradient-to-tr ${
-          game.accentGradient || 'from-indigo-600 to-purple-800'
-        } flex items-center justify-center shrink-0 shadow-lg ring-1 ring-white/10 overflow-hidden cursor-pointer active:scale-95 transition-transform`}
+          game.accentGradient || 'from-red-600 to-rose-800'
+        } flex items-center justify-center shrink-0 shadow-lg ring-1 ring-red-500/20 overflow-hidden cursor-pointer active:scale-95 transition-transform`}
         onClick={() => onPlay(game)}
       >
         {renderIcon()}
@@ -124,7 +124,7 @@ export const GameCard: React.FC<GameCardProps> = ({
         <div className="flex items-center gap-1.5 flex-wrap">
           <h3
             onClick={() => onPlay(game)}
-            className="text-sm font-semibold text-white tracking-tight truncate leading-snug cursor-pointer hover:text-indigo-300 transition-colors"
+            className="text-sm font-semibold text-white tracking-tight truncate leading-snug cursor-pointer hover:text-red-400 transition-colors"
           >
             {game.title}
           </h3>
@@ -141,7 +141,7 @@ export const GameCard: React.FC<GameCardProps> = ({
             </span>
           )}
           {game.fileType === 'html' && (
-            <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 shrink-0">
+            <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-red-500/20 text-red-300 border border-red-500/30 shrink-0">
               HTML5
             </span>
           )}
@@ -188,12 +188,12 @@ export const GameCard: React.FC<GameCardProps> = ({
           onClick={() => onPlay(game)}
           className={`flex items-center gap-1.5 px-3.5 py-2 text-white font-bold text-xs tracking-wide rounded-xl shadow-md transition-transform active:scale-95 cursor-pointer ${
             isPicture
-              ? 'bg-emerald-600 hover:bg-emerald-500'
+              ? 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-950/40'
               : game.fileType === 'ipa' || game.fileType === 'apk'
-              ? 'bg-amber-600 hover:bg-amber-500'
+              ? 'bg-amber-600 hover:bg-amber-500 shadow-amber-950/40'
               : game.fileType === '3d'
-              ? 'bg-cyan-600 hover:bg-cyan-500'
-              : 'bg-indigo-600 hover:bg-indigo-500'
+              ? 'bg-cyan-600 hover:bg-cyan-500 shadow-cyan-950/40'
+              : 'bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 shadow-red-950/50'
           }`}
           aria-label={`Open ${game.title}`}
         >
@@ -250,7 +250,7 @@ export const GameCard: React.FC<GameCardProps> = ({
                   setShowMenu(false);
                 }}
               />
-              <div className="absolute right-0 top-9 z-50 w-44 bg-[#181c2d] border border-white/10 rounded-2xl p-1.5 shadow-2xl backdrop-blur-xl animate-in fade-in zoom-in-95">
+              <div className="absolute right-0 top-9 z-50 w-44 bg-[#180a0f] border border-red-900/50 rounded-2xl p-1.5 shadow-2xl backdrop-blur-xl animate-in fade-in zoom-in-95">
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -259,7 +259,7 @@ export const GameCard: React.FC<GameCardProps> = ({
                   }}
                   className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-slate-200 hover:text-white hover:bg-white/10 rounded-xl transition-colors text-left cursor-pointer"
                 >
-                  <Edit2 className="w-3.5 h-3.5 text-indigo-400" />
+                  <Edit2 className="w-3.5 h-3.5 text-red-400" />
                   <span>Rename</span>
                 </button>
                 <button
@@ -277,7 +277,7 @@ export const GameCard: React.FC<GameCardProps> = ({
                   }}
                   className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-slate-200 hover:text-white hover:bg-white/10 rounded-xl transition-colors text-left cursor-pointer"
                 >
-                  <HardDriveDownload className="w-3.5 h-3.5 text-indigo-400" />
+                  <HardDriveDownload className="w-3.5 h-3.5 text-red-400" />
                   <span>Resumable Download</span>
                 </button>
                 <div className="my-1 border-t border-white/10" />
