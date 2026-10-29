@@ -132,6 +132,15 @@ app.get('/api/supabase/status', async (_req, res) => {
   });
 });
 
+// 1b. Public Supabase Configuration for Client-side Realtime channels
+app.get('/api/supabase/config', (_req, res) => {
+  res.json({
+    url: supabaseConfig.url || '',
+    anonKey: process.env.SUPABASE_ANON_KEY || supabaseConfig.key || '',
+    configured: Boolean(supabaseConfig.url && (process.env.SUPABASE_ANON_KEY || supabaseConfig.key)),
+  });
+});
+
 // 2. Direct Multipart File Upload to Supabase Storage "game-files" & Database "games"
 app.post('/api/upload', upload.single('file'), async (req, res) => {
   try {
@@ -743,52 +752,6 @@ app.get('/api/games', async (req, res) => {
   }
 
   let allGames = Array.from(gamesMap.values());
-
-  // 4. Live online search expansion from CrazyGames for unindexed queries
-  if (searchQuery && allGames.filter(g => g.title.toLowerCase().includes(searchQuery)).length < 4) {
-    try {
-      const tagUrl = `https://www.crazygames.com/t/${encodeURIComponent(searchQuery)}`;
-      const liveRes = await fetch(tagUrl, {
-        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
-      });
-      if (liveRes.ok) {
-        const html = await liveRes.text();
-        const scriptMatch = html.match(/<script[^>]*type="application\/json"[^>]*>([\s\S]*?)<\/script>/);
-        if (scriptMatch) {
-          const liveData = JSON.parse(scriptMatch[1]);
-          const liveItems = liveData.props?.pageProps?.games?.items || [];
-          for (const item of liveItems) {
-            if (item.slug && !gamesMap.has(item.slug)) {
-              const coverUrl = item.cover?.startsWith('http')
-                ? item.cover
-                : `https://images.crazygames.com/${item.cover}?auto=format,compress&q=75&cs=strip&ch=DPR&w=512`;
-              const directRunner = `https://games.crazygames.com/en_US/${item.slug}/index.html`;
-              const newGame = {
-                id: item.slug,
-                title: item.name,
-                filename: `${item.slug}.web`,
-                fileType: 'html',
-                fileSize: 15000000,
-                category: item.categoryName || (searchQuery.charAt(0).toUpperCase() + searchQuery.slice(1)),
-                genre: searchQuery,
-                thumbnailUrl: coverUrl,
-                iconDataUrl: coverUrl,
-                storageUrl: directRunner,
-                webUrl: directRunner,
-                gameUrl: directRunner,
-                playCount: item.totalPlays || 1200000,
-                totalPlays: item.totalPlays || 1200000,
-                rating: 4.8,
-                description: `${item.name} - Play free online in app.`,
-              };
-              gamesMap.set(item.slug, newGame);
-              allGames.unshift(newGame);
-            }
-          }
-        }
-      }
-    } catch (e) {}
-  }
 
   // 5. Real-time filtering by title or category
   let filtered = allGames;
@@ -1431,7 +1394,7 @@ async function startServer() {
 
   wss.on('connection', (ws: WebSocket, req) => {
     const url = new URL(req.url || '', `http://${req.headers.host || 'localhost'}`);
-    const sessionId = url.searchParams.get('session') || 'airplay-main-session';
+    const sessionId = (url.searchParams.get('session') || url.searchParams.get('room') || url.searchParams.get('roomCode') || 'airplay-main-session').toUpperCase().trim();
 
     if (!sessions.has(sessionId)) {
       sessions.set(sessionId, new Set());

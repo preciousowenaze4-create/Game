@@ -5,13 +5,9 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import {
-  Search,
   Gamepad2,
-  Sparkles,
   Download,
   PlusCircle,
-  Trash2,
-  Image as ImageIcon,
   Flame,
   FolderArchive,
 } from 'lucide-react';
@@ -27,23 +23,37 @@ import {
 } from './utils/db';
 import { Header } from './components/Header';
 import { GameUploader } from './components/GameUploader';
-import { GameCard } from './components/GameCard';
 import { GamePlayer } from './components/GamePlayer';
 import { DownloadsManager } from './components/DownloadsManager';
 import { EditGameModal } from './components/EditGameModal';
 import { TransferProgressTracker } from './components/TransferProgressTracker';
 import { BossGameCatalog } from './components/BossGameCatalog';
 import { AirPlayRemoteController } from './components/AirPlayRemoteController';
-import { TvReceiverView } from './components/TvReceiverView';
+import { TvDisplayScreen } from './components/TvDisplayScreen';
+import { IPhoneControllerScreen } from './components/IPhoneControllerScreen';
 import { airPlayService } from './services/airplayService';
+import { OFFICIAL_UNITY_CAR_SIM } from './utils/sampleGames';
 
 type DashboardTab = 'arcade' | 'library' | 'downloads' | 'install';
+type AppMode = 'dashboard' | 'tv' | 'controller';
 
 export default function App() {
-  // If user opens the TV Receiver URL directly on Apple TV / TV Screen browser:
-  if (typeof window !== 'undefined' && window.location.pathname.startsWith('/tv')) {
-    return <TvReceiverView />;
-  }
+  const [currentMode, setCurrentMode] = useState<AppMode>(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const modeParam = params.get('mode') || params.get('role');
+      if (modeParam === 'tv' || window.location.pathname.startsWith('/tv')) return 'tv';
+      if (modeParam === 'controller' || window.location.pathname.startsWith('/controller')) return 'controller';
+    }
+    return 'dashboard';
+  });
+
+  const urlRoomCode = useMemo(() => {
+    if (typeof window !== 'undefined') {
+      return new URLSearchParams(window.location.search).get('room') || '';
+    }
+    return '';
+  }, []);
 
   const [games, setGames] = useState<GameItem[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -68,7 +78,7 @@ export default function App() {
     airPlayService.triggerNativeAirPlayPicker();
   };
 
-  // Load real games from IndexedDB on startup (starts empty until user uploads)
+  // Load real games from IndexedDB on startup
   useEffect(() => {
     async function load() {
       try {
@@ -165,11 +175,12 @@ export default function App() {
     }
   };
 
-  // Play / Open Game Handler (launches real file in in-app web arcade player with Supabase URL)
+  // Play Game Handler (launches official Unity game or uploaded file)
   const handlePlayGame = async (game: GameItem) => {
     const gameToPlay: GameItem = {
       ...game,
-      storageUrl: game.storageUrl || `/api/games/${game.id}/download`,
+      storageUrl: game.storageUrl || game.webUrl || OFFICIAL_UNITY_CAR_SIM.webUrl,
+      webUrl: game.webUrl || OFFICIAL_UNITY_CAR_SIM.webUrl,
     };
     setActivePlayingGame(gameToPlay);
     try {
@@ -192,43 +203,31 @@ export default function App() {
     };
   }, [games]);
 
-  // Filter games based on search and category
-  const filteredGames = useMemo(() => {
-    return games.filter((g) => {
-      const matchSearch =
-        g.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        g.filename.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (g.apkDetails?.packageName &&
-          g.apkDetails.packageName.toLowerCase().includes(searchQuery.toLowerCase()));
+  // =========================================================================
+  // ROUTE 1: DEDICATED TV DISPLAY SCREEN
+  // =========================================================================
+  if (currentMode === 'tv') {
+    return <TvDisplayScreen onExit={() => setCurrentMode('dashboard')} />;
+  }
 
-      let matchCategory = true;
-      if (activeCategory === 'Android APK') {
-        matchCategory = g.fileType === 'apk';
-      } else if (activeCategory === 'iOS IPA') {
-        matchCategory = g.fileType === 'ipa';
-      } else if (activeCategory === 'HTML5') {
-        matchCategory = g.fileType === 'html';
-      } else if (activeCategory === 'Pictures') {
-        matchCategory = g.fileType === 'picture';
-      } else if (activeCategory === '3D Models') {
-        matchCategory = g.fileType === '3d';
-      } else if (activeCategory !== 'All') {
-        matchCategory = g.category === activeCategory;
-      }
+  // =========================================================================
+  // ROUTE 2: DEDICATED IPHONE CONTROLLER SCREEN
+  // =========================================================================
+  if (currentMode === 'controller') {
+    return (
+      <IPhoneControllerScreen
+        initialRoomCode={urlRoomCode}
+        onExit={() => setCurrentMode('dashboard')}
+      />
+    );
+  }
 
-      return matchSearch && matchCategory;
-    });
-  }, [games, searchQuery, activeCategory]);
-
-  const categories = ['All', 'Android APK', 'iOS IPA', 'HTML5', 'Pictures', '3D Models'];
-
+  // =========================================================================
+  // MAIN DASHBOARD VIEW
+  // =========================================================================
   return (
     <div className="min-h-screen bg-[#080305] text-red-50 flex flex-col items-center justify-start overflow-x-hidden selection:bg-red-600/40 selection:text-white">
-      {/* 
-        AIRPLAY WIRELESS REMOTE CONTROLLER:
-        The moment the native iOS AirPlay session becomes active, the app interface on the iPhone 
-        automatically transforms into a clean white touch-sensitive remote control / trackpad dashboard.
-      */}
+      {/* Wireless Remote Controller for AirPlay */}
       {isAirPlayCasting && (
         <AirPlayRemoteController
           currentGame={activePlayingGame}
@@ -240,7 +239,7 @@ export default function App() {
         />
       )}
 
-      {/* Full-Screen Game / Media Player Overlay when active */}
+      {/* Full-Screen Game Player Overlay when active */}
       {activePlayingGame && !isAirPlayCasting && (
         <GamePlayer
           game={activePlayingGame}
@@ -251,15 +250,16 @@ export default function App() {
 
       {/* Main App Container */}
       <div className="w-full max-w-2xl px-4 py-3 sm:px-6 min-h-screen">
-        {/* Content Body */}
         <div className="flex flex-col pt-2 pb-16">
-          {/* Header */}
+          {/* Header with TV Screen & iPhone Controller Buttons */}
           <Header
             stats={stats}
             onOpenAirPlayModal={handleTriggerAirPlay}
+            onOpenTvScreen={() => setCurrentMode('tv')}
+            onOpenController={() => setCurrentMode('controller')}
           />
 
-          {/* Navigation Tabs in Vibrant Red & Dark Theme */}
+          {/* Navigation Tabs */}
           <div className="grid grid-cols-4 gap-1 p-1.5 my-3 bg-[#13070b] rounded-2xl border border-red-950/80 shadow-xl shadow-black/80">
             <button
               onClick={() => setActiveTab('arcade')}
@@ -270,10 +270,7 @@ export default function App() {
               }`}
             >
               <Flame className="w-3.5 h-3.5 text-amber-400" />
-              <span>Arcade</span>
-              <span className="text-[10px] px-1 py-0.2 rounded-full bg-red-950 text-red-300 font-bold border border-red-700/50">
-                Live
-              </span>
+              <span>Unity Sim</span>
             </button>
 
             <button
@@ -319,9 +316,13 @@ export default function App() {
             </button>
           </div>
 
-          {/* Tab 0: Boss Gaming Platform (Dynamic Supabase Integration) */}
+          {/* Tab 0: Boss Gaming Platform (Official Unity WebGL Car Sim) */}
           {activeTab === 'arcade' && (
-            <BossGameCatalog onPlayGame={handlePlayGame} />
+            <BossGameCatalog
+              onPlayGame={handlePlayGame}
+              onOpenTvScreen={() => setCurrentMode('tv')}
+              onOpenController={() => setCurrentMode('controller')}
+            />
           )}
 
           {/* Tab 1: Install / Upload Real File */}
@@ -345,144 +346,83 @@ export default function App() {
           {/* Tab 3: Main Game Library */}
           {activeTab === 'library' && (
             <div className="space-y-3 animate-in fade-in">
-              {/* Metrics Strip */}
-              <div className="grid grid-cols-4 gap-2 p-3 bg-[#111420] rounded-2xl border border-white/5 text-center">
+              <div className="grid grid-cols-4 gap-2 p-3 bg-[#13070b] rounded-2xl border border-red-950/80 text-center">
                 <div>
-                  <div className="text-[10px] font-medium text-slate-400">Total Files</div>
+                  <div className="text-[10px] font-medium text-red-300/60">Total Files</div>
                   <div className="text-sm font-bold text-white tabular-nums">
                     {stats.totalGames}
                   </div>
                 </div>
-                <div className="border-l border-white/5">
-                  <div className="text-[10px] font-medium text-slate-400">APKs</div>
-                  <div className="text-sm font-bold text-amber-400 tabular-nums">
+                <div className="border-l border-red-950/80">
+                  <div className="text-[10px] font-medium text-red-300/60">APKs</div>
+                  <div className="text-sm font-bold text-red-400 tabular-nums">
                     {stats.apkCount}
                   </div>
                 </div>
-                <div className="border-l border-white/5">
-                  <div className="text-[10px] font-medium text-slate-400">Media</div>
-                  <div className="text-sm font-bold text-emerald-400 tabular-nums">
+                <div className="border-l border-red-950/80">
+                  <div className="text-[10px] font-medium text-red-300/60">Pictures</div>
+                  <div className="text-sm font-bold text-rose-400 tabular-nums">
                     {stats.pictureCount}
                   </div>
                 </div>
-                <div className="border-l border-white/5">
-                  <div className="text-[10px] font-medium text-slate-400">Storage</div>
-                  <div className="text-sm font-bold text-indigo-400 tabular-nums">
+                <div className="border-l border-red-950/80">
+                  <div className="text-[10px] font-medium text-red-300/60">Storage</div>
+                  <div className="text-xs font-mono font-bold text-amber-300 truncate mt-0.5">
                     {formatBytes(stats.totalBytes)}
                   </div>
                 </div>
               </div>
 
-              {/* Category Pills & Search Box if files exist */}
-              {games.length > 0 && (
+              {games.length === 0 ? (
+                <div className="py-12 text-center text-red-300/60 bg-[#13070b] rounded-2xl border border-red-950/80 p-6">
+                  <p className="text-xs">No files uploaded yet. Upload an APK or play the Unity Car Sim.</p>
+                </div>
+              ) : (
                 <div className="space-y-2">
-                  <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-                    {categories.map((cat) => (
+                  {games.map((g) => (
+                    <div
+                      key={g.id}
+                      className="p-3 bg-[#13070b] border border-red-950/80 rounded-xl flex items-center justify-between"
+                    >
+                      <div>
+                        <div className="text-xs font-bold text-white">{g.title}</div>
+                        <div className="text-[10px] text-red-300/60">{formatBytes(g.fileSize)}</div>
+                      </div>
                       <button
-                        key={cat}
-                        onClick={() => setActiveCategory(cat)}
-                        className={`px-3 py-1 text-xs rounded-full whitespace-nowrap transition-all cursor-pointer ${
-                          activeCategory === cat
-                            ? 'bg-indigo-600 text-white font-semibold'
-                            : 'bg-white/5 text-slate-400 hover:text-white'
-                        }`}
+                        onClick={() => handlePlayGame(g)}
+                        className="px-3 py-1 bg-red-600 hover:bg-red-500 rounded-lg text-xs font-bold text-white cursor-pointer"
                       >
-                        {cat}
+                        Play
                       </button>
-                    ))}
-                  </div>
-
-                  <div className="relative">
-                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
-                    <input
-                      type="text"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="Search installed files..."
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#111420] border border-white/5 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-indigo-500/50 transition-colors"
-                    />
-                  </div>
+                    </div>
+                  ))}
                 </div>
               )}
-
-              {/* Files / Games List Container */}
-              <div className="space-y-2 pt-1">
-                {isLoading ? (
-                  <div className="flex flex-col items-center justify-center py-12 text-slate-500 gap-2">
-                    <div className="w-6 h-6 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin" />
-                    <span className="text-xs">Loading Game Center...</span>
-                  </div>
-                ) : filteredGames.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-16 px-4 text-center rounded-2xl bg-[#111420]/60 border border-white/5">
-                    <div className="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center text-slate-500 mb-3">
-                      <Gamepad2 className="w-7 h-7" />
-                    </div>
-                    <h4 className="text-sm font-bold text-slate-200 mb-1">
-                      No files installed
-                    </h4>
-                    <p className="text-xs text-slate-400 max-w-xs mb-5">
-                      Your library is currently empty. Tap below to upload a real game, APK, or picture file from your phone.
-                    </p>
-                    <button
-                      onClick={() => setActiveTab('install')}
-                      className="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95 cursor-pointer"
-                    >
-                      <PlusCircle className="w-4 h-4" />
-                      <span>Upload Real File</span>
-                    </button>
-                  </div>
-                ) : (
-                  filteredGames.map((game) => (
-                    <GameCard
-                      key={game.id}
-                      game={game}
-                      onPlay={handlePlayGame}
-                      onDelete={handleDeleteGame}
-                      onRename={(id, title) => setEditingGame({ id, title })}
-                    />
-                  ))
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Storage & Clear Engine */}
-          {games.length > 0 && (
-            <div className="mt-8 pt-3 border-t border-white/5 flex items-center justify-between text-xs text-slate-500">
-              <span>IndexedDB Offline Storage Active</span>
-              <button
-                onClick={handleClearAll}
-                className="text-rose-400 hover:text-rose-300 flex items-center gap-1 cursor-pointer"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-                <span>Clear All</span>
-              </button>
             </div>
           )}
         </div>
       </div>
 
-      {/* Toast Notification in Red & Dark Theme */}
-      {toastMessage && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-2xl bg-[#18080d]/95 text-red-50 border border-red-700/60 text-xs font-bold shadow-2xl shadow-red-950/80 backdrop-blur-xl animate-in fade-in slide-in-from-bottom-3 flex items-center gap-2 pointer-events-none">
-          <Sparkles className="w-3.5 h-3.5 text-red-400" />
-          <span>{toastMessage}</span>
-        </div>
-      )}
-
-      {/* Rename Modal */}
+      {/* Edit Game Modal */}
       {editingGame && (
         <EditGameModal
           isOpen={true}
-          initialTitle={editingGame.title}
           gameId={editingGame.id}
-          onSave={handleSaveRename}
+          initialTitle={editingGame.title}
+          onSave={(_id, newTitle) => {
+            handleSaveRename(editingGame.id, newTitle);
+            setEditingGame(null);
+          }}
           onClose={() => setEditingGame(null)}
         />
       )}
 
-      {/* Persistent Progress Tracker for Resumable Uploads & Downloads */}
-      <TransferProgressTracker />
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-4 py-2 bg-red-950/95 border border-red-700/80 text-white text-xs font-bold rounded-2xl shadow-2xl animate-in fade-in slide-in-from-bottom-2">
+          {toastMessage}
+        </div>
+      )}
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { GameItem } from '../types/game';
-import { resolvePlayableGameUrl } from './gameUrlHelper';
-import rawCatalog from './realCrazyGamesCatalog.json';
+import { OFFICIAL_UNITY_CAR_SIM } from './sampleGames';
+
+export const OFFICIAL_GAME_URL = 'https://play.unity.com/en/games/b8915ae5-7634-4424-93ad-73778832a84b/car-sim-test';
 
 export interface RawCatalogGame {
   id: string;
@@ -16,13 +17,22 @@ export interface RawCatalogGame {
   thumbnailUrl: string;
 }
 
-export const REAL_CATALOG_GAMES: RawCatalogGame[] = rawCatalog as RawCatalogGame[];
+export const REAL_CATALOG_GAMES: RawCatalogGame[] = [
+  {
+    id: 'unity-car-sim-test',
+    title: 'Unity Car Simulation Test',
+    slug: 'car-sim-test',
+    category: 'Car & Driving',
+    genre: '3D Simulation',
+    cover: OFFICIAL_UNITY_CAR_SIM.thumbnailUrl || '',
+    gameUrl: OFFICIAL_GAME_URL,
+    totalPlays: 14520,
+    rating: 4.9,
+    description: 'Official 3D Unity WebGL Car Simulation test game with realistic vehicle physics, drift handling, high-speed acceleration, and TV casting support.',
+    thumbnailUrl: OFFICIAL_UNITY_CAR_SIM.thumbnailUrl || '',
+  },
+];
 
-/**
- * Initial dynamic seed games for Supabase table 'games'.
- * Features 300+ real HTML5 / WebGL games with official high-res logos
- * and direct unblocked runners from CrazyGames and verified providers.
- */
 export const INITIAL_SEED_GAMES: Array<{
   id: string;
   title: string;
@@ -33,32 +43,29 @@ export const INITIAL_SEED_GAMES: Array<{
   package_name: string;
   version_name: string;
   storage_url: string;
-}> = REAL_CATALOG_GAMES.map((game, index) => {
-  return {
-    id: game.id || game.slug,
-    title: game.title,
-    filename: `${game.slug}.web`,
-    file_size: 15000000 + (index * 50000),
+}> = [
+  {
+    id: 'unity-car-sim-test',
+    title: 'Unity Car Simulation Test',
+    filename: 'car-sim-test.unityweb',
+    file_size: 45000000,
     file_type: 'html',
-    icon_data_url: game.thumbnailUrl,
+    icon_data_url: OFFICIAL_UNITY_CAR_SIM.thumbnailUrl || '',
     package_name: JSON.stringify({
-      category: game.category,
-      genre: game.genre,
-      total_plays: game.totalPlays || 150000,
-      rating: game.rating || 4.8,
-      featured: index < 15,
-      description: game.description,
-      thumbnail_url: game.thumbnailUrl,
-      game_url: game.gameUrl,
+      category: 'Car & Driving',
+      genre: '3D Simulation',
+      total_plays: 14520,
+      rating: 4.9,
+      featured: true,
+      description: 'Official 3D Unity WebGL Car Simulation with TV pairing and real-time smartphone virtual gamepad control.',
+      thumbnail_url: OFFICIAL_UNITY_CAR_SIM.thumbnailUrl,
+      game_url: OFFICIAL_GAME_URL,
     }),
-    version_name: game.category,
-    storage_url: game.gameUrl,
-  };
-});
+    version_name: 'Car & Driving',
+    storage_url: OFFICIAL_GAME_URL,
+  },
+];
 
-/**
- * Normalizes a raw Supabase `games` row into a rich GameItem
- */
 export function normalizeSupabaseGameRow(row: any): GameItem {
   let meta: any = {};
   if (row.package_name) {
@@ -69,58 +76,44 @@ export function normalizeSupabaseGameRow(row: any): GameItem {
     }
   }
 
-  const category =
-    meta.category || row.version_name || (row.file_type === 'picture' ? 'Pictures' : 'Arcade Classics');
+  const category = meta.category || row.version_name || 'Car & Driving';
   const genre = meta.genre || category;
-  const rawWebUrl = row.storage_url || meta.game_url || meta.web_url || '';
-  const webUrl = resolvePlayableGameUrl(rawWebUrl);
-  // Match official verified game art from real catalog
-  const catalogMatch = REAL_CATALOG_GAMES.find(
-    (g) => g.id === row.id || g.slug === row.id || g.title.toLowerCase() === (row.title || '').toLowerCase()
-  );
+  const rawWebUrl = row.storage_url || meta.game_url || OFFICIAL_GAME_URL;
 
-  let thumbnailUrl: string =
-    catalogMatch?.thumbnailUrl ||
+  const thumbnailUrl =
     row.icon_data_url ||
     meta.thumbnail_url ||
-    'https://images.crazygames.com/games/drift-hunters/cover-1656950639575.png?auto=format,compress&q=75&cs=strip&ch=DPR&w=512';
+    OFFICIAL_UNITY_CAR_SIM.thumbnailUrl ||
+    'https://images.unsplash.com/photo-1542282088-72c9c27ed0cd?auto=format&fit=crop&w=800&q=80';
 
-  // Strip any old unsplash placeholder completely
-  if (thumbnailUrl.includes('unsplash.com')) {
-    thumbnailUrl = catalogMatch?.thumbnailUrl || 'https://images.crazygames.com/games/drift-hunters/cover-1656950639575.png?auto=format,compress&q=75&cs=strip&ch=DPR&w=512';
-  }
-
-  const totalPlays = Number(meta.total_plays || meta.play_count || 120);
-  const rating = Number(meta.rating || 4.8);
-  const description = meta.description || meta.notes || '';
-  const featured = Boolean(meta.featured);
+  const totalPlays = Number(meta.total_plays || meta.play_count || 14520);
+  const rating = Number(meta.rating || 4.9);
+  const description = meta.description || meta.notes || 'Official Unity WebGL 3D Car Simulation';
+  const featured = Boolean(meta.featured ?? true);
 
   return {
     id: row.id,
-    title: row.title || 'Untitled Game',
-    filename: row.filename || `${row.id}.web`,
+    title: row.title || 'Unity Car Simulation Test',
+    filename: row.filename || 'car-sim-test.unityweb',
     fileType: row.file_type || 'html',
-    fileSize: row.file_size || 5000000,
+    fileSize: row.file_size || 45000000,
     addedAt: row.created_at ? new Date(row.created_at).getTime() : Date.now(),
     playCount: totalPlays,
-    totalPlays,
     category,
     genre,
-    accentGradient: 'from-indigo-600 to-violet-700',
-    iconName: 'Gamepad2',
-    iconDataUrl: thumbnailUrl,
+    accentGradient: 'from-red-600 via-rose-600 to-amber-600',
+    iconName: 'Car',
     thumbnailUrl,
     notes: description,
     description,
+    rating,
+    featured,
     htmlContent: '',
-    webUrl: webUrl || rawWebUrl,
-    gameUrl: webUrl || rawWebUrl,
-    storageUrl: webUrl || row.storage_url,
+    webUrl: rawWebUrl,
+    storageUrl: rawWebUrl,
     downloadStatus: 'ready',
     downloadProgress: 100,
     preferredOrientation: 'landscape',
     isWebCatalog: true,
-    rating,
-    featured,
   };
 }

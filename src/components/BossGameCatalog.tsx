@@ -7,29 +7,35 @@ import {
   Flame,
   Plus,
   RefreshCw,
-  Trophy,
-  Gamepad2,
   Tv,
+  Smartphone,
   X,
   Layers,
-  ChevronDown,
-  ArrowUp,
+  Car,
+  Compass,
+  Gauge,
   Zap,
 } from 'lucide-react';
 import { GameItem } from '../types/game';
 import { fetchGamesFromSupabase, addGameToSupabase } from '../utils/supabaseCatalog';
+import { OFFICIAL_UNITY_CAR_SIM } from '../utils/sampleGames';
 
 interface BossGameCatalogProps {
   onPlayGame: (game: GameItem) => void;
+  onOpenTvScreen?: () => void;
+  onOpenController?: () => void;
 }
 
-export const BossGameCatalog: React.FC<BossGameCatalogProps> = ({ onPlayGame }) => {
-  const [games, setGames] = useState<GameItem[]>([]);
+export const BossGameCatalog: React.FC<BossGameCatalogProps> = ({
+  onPlayGame,
+  onOpenTvScreen,
+  onOpenController,
+}) => {
+  const [games, setGames] = useState<GameItem[]>([OFFICIAL_UNITY_CAR_SIM]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
-  const [displayCount, setDisplayCount] = useState<number>(36);
   const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
 
   // New Game Form State
@@ -47,9 +53,12 @@ export const BossGameCatalog: React.FC<BossGameCatalogProps> = ({ onPlayGame }) 
       const fetched = await fetchGamesFromSupabase(search, cat);
       if (fetched && fetched.length > 0) {
         setGames(fetched);
+      } else {
+        setGames([OFFICIAL_UNITY_CAR_SIM]);
       }
     } catch (err) {
       console.warn('Failed to load games:', err);
+      setGames([OFFICIAL_UNITY_CAR_SIM]);
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
@@ -60,7 +69,6 @@ export const BossGameCatalog: React.FC<BossGameCatalogProps> = ({ onPlayGame }) 
     loadDynamicGames(searchQuery, selectedCategory, true);
   }, [selectedCategory]);
 
-  // Debounced search query trigger
   useEffect(() => {
     const handler = setTimeout(() => {
       loadDynamicGames(searchQuery, selectedCategory, false);
@@ -73,19 +81,12 @@ export const BossGameCatalog: React.FC<BossGameCatalogProps> = ({ onPlayGame }) 
     loadDynamicGames(searchQuery, selectedCategory, false);
   };
 
-  // Categories list with counts
   const categories = [
     { id: 'All', label: 'All Games', icon: <Layers className="w-3.5 h-3.5" /> },
-    { id: 'Car', label: 'Car & Driving', icon: <Gamepad2 className="w-3.5 h-3.5 text-red-400" /> },
-    { id: 'Action', label: 'Action & Stunts', icon: <Flame className="w-3.5 h-3.5 text-rose-400" /> },
-    { id: 'Multiplayer', label: 'Multiplayer .io', icon: <Trophy className="w-3.5 h-3.5 text-amber-400" /> },
-    { id: 'Shooting', label: 'Shooting', icon: <Zap className="w-3.5 h-3.5 text-red-500" /> },
-    { id: 'Sports', label: 'Sports & Bike', icon: <Sparkles className="w-3.5 h-3.5 text-rose-300" /> },
-    { id: 'Puzzle', label: 'Mind & Puzzles', icon: <Sparkles className="w-3.5 h-3.5 text-amber-300" /> },
-    { id: 'Rhythm', label: 'Rhythm & Music', icon: <Sparkles className="w-3.5 h-3.5 text-red-400" /> },
+    { id: 'Car & Driving', label: 'Car & Driving', icon: <Car className="w-3.5 h-3.5 text-red-400" /> },
+    { id: '3D Simulation', label: '3D Simulation', icon: <Gauge className="w-3.5 h-3.5 text-rose-400" /> },
   ];
 
-  // Dynamic search and filter
   const filteredGames = useMemo(() => {
     return games.filter((game) => {
       const q = searchQuery.toLowerCase().trim();
@@ -93,26 +94,17 @@ export const BossGameCatalog: React.FC<BossGameCatalogProps> = ({ onPlayGame }) 
         !q ||
         game.title.toLowerCase().includes(q) ||
         game.category.toLowerCase().includes(q) ||
-        (game.genre && game.genre.toLowerCase().includes(q)) ||
         (game.description && game.description.toLowerCase().includes(q));
 
       let matchCategory = true;
       if (selectedCategory !== 'All') {
-        const catLow = selectedCategory.toLowerCase();
-        matchCategory =
-          game.category.toLowerCase().includes(catLow) ||
-          Boolean(game.genre && game.genre.toLowerCase().includes(catLow));
+        matchCategory = game.category.toLowerCase().includes(selectedCategory.toLowerCase());
       }
 
       return matchSearch && matchCategory;
     });
   }, [games, searchQuery, selectedCategory]);
 
-  const visibleGames = useMemo(() => {
-    return filteredGames.slice(0, displayCount);
-  }, [filteredGames, displayCount]);
-
-  // Handle Add Game submit (works directly without login)
   const handleAddGameSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTitle.trim() || !newUrl.trim()) return;
@@ -142,29 +134,96 @@ export const BossGameCatalog: React.FC<BossGameCatalogProps> = ({ onPlayGame }) 
     }
   };
 
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
   return (
     <div className="space-y-4 pb-16">
       {/* 
-        HEADER & CONTROLS IN RED & DARK OBSIDIAN
-        Clean, sticky top section with real-time Search, Category pills, and Stats
+        FEATURED HERO: OFFICIAL UNITY WEBGL 3D CAR SIMULATION
+      */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-b from-[#22070d] via-[#140508] to-[#0a0305] border-2 border-red-600/50 shadow-2xl shadow-red-950/80 p-5 sm:p-7">
+        <div className="absolute top-0 right-0 w-[350px] h-[300px] bg-red-600/20 rounded-full blur-[90px] pointer-events-none" />
+
+        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="space-y-3 max-w-xl text-center md:text-left">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-950/90 border border-red-500/50 text-[11px] font-black uppercase tracking-wider text-red-300 shadow-sm shadow-red-950">
+              <span className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
+              <span>Official Unity WebGL Engine</span>
+            </div>
+
+            <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight leading-tight">
+              Unity Car Simulation <span className="text-red-500">Test</span>
+            </h2>
+
+            <p className="text-xs sm:text-sm text-red-200/80 leading-relaxed">
+              Official high-fidelity 3D car simulation with steering, high-speed throttle,
+              braking, and drift handling. Cast directly to your TV screen and turn your iPhone
+              into a zero-lag virtual touch steering wheel and pedals.
+            </p>
+
+            {/* Action Buttons: Play Direct, TV Cast, iPhone Controller */}
+            <div className="flex flex-wrap items-center justify-center md:justify-start gap-2.5 pt-2">
+              <button
+                onClick={() => onPlayGame(OFFICIAL_UNITY_CAR_SIM)}
+                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-red-600 via-rose-600 to-red-700 hover:from-red-500 hover:to-rose-500 active:scale-95 text-white font-extrabold text-xs shadow-xl shadow-red-600/40 border border-red-400/40 transition-all flex items-center gap-2 cursor-pointer"
+              >
+                <Play className="w-4 h-4 fill-white" />
+                <span>Play Now</span>
+              </button>
+
+              {onOpenTvScreen && (
+                <button
+                  onClick={onOpenTvScreen}
+                  className="px-4 py-2.5 rounded-xl bg-red-950/80 hover:bg-red-900 active:scale-95 text-white font-bold text-xs border border-red-700/60 shadow-lg transition-all flex items-center gap-2 cursor-pointer"
+                >
+                  <Tv className="w-4 h-4 text-red-400" />
+                  <span>TV Display Screen</span>
+                </button>
+              )}
+
+              {onOpenController && (
+                <button
+                  onClick={onOpenController}
+                  className="px-4 py-2.5 rounded-xl bg-black/60 hover:bg-red-950/80 active:scale-95 text-red-200 font-bold text-xs border border-red-900/60 shadow-lg transition-all flex items-center gap-2 cursor-pointer"
+                >
+                  <Smartphone className="w-4 h-4 text-red-400" />
+                  <span>iPhone Gamepad</span>
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* 3D Car Visual Card */}
+          <div className="w-full md:w-64 aspect-[4/3] rounded-2xl overflow-hidden border border-red-600/40 shadow-2xl shadow-red-950 shrink-0 relative group">
+            <img
+              src="https://images.unsplash.com/photo-1542282088-72c9c27ed0cd?auto=format&fit=crop&w=800&q=80"
+              alt="Unity 3D Car Simulation"
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-3">
+              <div className="flex items-center justify-between w-full text-[11px] font-bold text-white">
+                <span className="flex items-center gap-1">
+                  <Flame className="w-3.5 h-3.5 text-amber-400" /> 3D WebGL
+                </span>
+                <span className="px-2 py-0.5 rounded bg-red-600 text-[10px] font-black">
+                  60 FPS
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 
+        SEARCH & CATALOG CONTROLS
       */}
       <div className="space-y-3 bg-[#110609]/95 backdrop-blur-xl p-3.5 rounded-3xl border border-red-950/80 shadow-2xl shadow-black sticky top-0 z-30">
-        {/* Top line: Search Bar + Add Game Button + Refresh Button */}
         <div className="flex items-center gap-2">
           <div className="relative flex-1">
             <Search className="w-4 h-4 text-red-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                setDisplayCount(36);
-              }}
-              placeholder="Search 330+ games (Drift, Stunt, .io, Car, Moto)..."
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search car sim or uploaded games..."
               className="w-full bg-[#170a0e] border border-red-900/40 rounded-2xl pl-9 pr-8 py-2.5 text-xs text-white placeholder-red-300/40 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all"
             />
             {searchQuery && (
@@ -180,7 +239,6 @@ export const BossGameCatalog: React.FC<BossGameCatalogProps> = ({ onPlayGame }) 
           <button
             onClick={() => setIsAddModalOpen(true)}
             className="flex items-center gap-1.5 px-3 py-2.5 rounded-2xl bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-black text-xs shadow-lg shadow-red-600/40 transition-all cursor-pointer whitespace-nowrap active:scale-95"
-            title="Add any game URL to Catalog"
           >
             <Plus className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Add Game</span>
@@ -196,17 +254,14 @@ export const BossGameCatalog: React.FC<BossGameCatalogProps> = ({ onPlayGame }) 
           </button>
         </div>
 
-        {/* Categories Bar: Horizontal scrollable pills with Red highlights */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar scroll-smooth">
+        {/* Categories Bar */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
           {categories.map((cat) => {
             const isActive = selectedCategory === cat.id;
             return (
               <button
                 key={cat.id}
-                onClick={() => {
-                  setSelectedCategory(cat.id);
-                  setDisplayCount(36);
-                }}
+                onClick={() => setSelectedCategory(cat.id)}
                 className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer active:scale-95 ${
                   isActive
                     ? 'bg-gradient-to-r from-red-600 to-rose-600 text-white shadow-md shadow-red-600/40 ring-1 ring-red-400'
@@ -219,42 +274,20 @@ export const BossGameCatalog: React.FC<BossGameCatalogProps> = ({ onPlayGame }) 
             );
           })}
         </div>
-
-        {/* Live counter bar */}
-        <div className="flex items-center justify-between text-[11px] text-red-300/70 px-1 pt-0.5">
-          <div className="flex items-center gap-2">
-            <span className="inline-block w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-            <span className="font-bold text-white">
-              {filteredGames.length} Games Ready
-            </span>
-            <span>•</span>
-            <span className="text-red-400 font-semibold">100% Free &amp; Unblocked</span>
-          </div>
-
-          <div className="text-[10px] text-red-300/80 font-mono">
-            Tap any box to play
-          </div>
-        </div>
       </div>
 
       {/* 
-        MAIN GAME GRID IN RED & DARK:
-        "A little box arranged straight down. I can scroll them."
-        Neat, compact, scrollable grid of game boxes with real logos
+        GAME CARDS GRID: CLEAN BOXES ARRANGED STRAIGHT DOWN
       */}
       {isLoading ? (
         <div className="py-20 flex flex-col items-center justify-center gap-3">
           <div className="w-9 h-9 border-3 border-red-500 border-t-transparent rounded-full animate-spin" />
-          <div className="text-xs font-black text-white">Loading Game Library...</div>
-          <div className="text-[11px] text-red-300/70">Connecting to real game runners &amp; logos</div>
+          <div className="text-xs font-black text-white">Loading Official Game...</div>
         </div>
       ) : filteredGames.length === 0 ? (
         <div className="py-16 text-center space-y-3 bg-[#13070b] rounded-3xl border border-red-950/80 p-6">
-          <div className="text-4xl">🎮</div>
+          <Car className="w-8 h-8 text-red-500 mx-auto" />
           <h3 className="text-sm font-bold text-white">No games matched "{searchQuery}"</h3>
-          <p className="text-xs text-red-300/70 max-w-sm mx-auto">
-            Try searching for "Car", "Drift", "Action", "Stunt", "Slither", "Moto", or click below to reset.
-          </p>
           <button
             onClick={() => {
               setSearchQuery('');
@@ -262,212 +295,128 @@ export const BossGameCatalog: React.FC<BossGameCatalogProps> = ({ onPlayGame }) 
             }}
             className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-red-600 to-rose-600 text-white font-black text-xs shadow-lg shadow-red-600/40 cursor-pointer"
           >
-            Show All 330+ Games
+            Show Official Unity Car Simulation
           </button>
         </div>
       ) : (
-        <div className="space-y-4">
-          {/* Compact little boxes grid arranged straight down */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2.5 sm:gap-3">
-            {visibleGames.map((game) => (
-              <div
-                key={game.id}
-                onClick={() => onPlayGame(game)}
-                className="group relative flex flex-col bg-[#12070a] hover:bg-[#1a0a0f] border border-red-950/80 hover:border-red-500/60 rounded-2xl overflow-hidden cursor-pointer shadow-lg hover:shadow-red-950/80 transition-all duration-200 active:scale-[0.98]"
-              >
-                {/* Official Game Thumbnail / Logo */}
-                <div className="relative aspect-[4/3] w-full bg-[#1b0a0f] overflow-hidden">
-                  <img
-                    src={game.thumbnailUrl || game.iconDataUrl}
-                    alt={game.title}
-                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                    loading="lazy"
-                    onError={(e) => {
-                      (e.target as HTMLElement).style.display = 'none';
-                    }}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#12070a] via-transparent to-black/20" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+          {filteredGames.map((game) => (
+            <div
+              key={game.id}
+              onClick={() => onPlayGame(game)}
+              className="group relative flex flex-col bg-[#12070a] hover:bg-[#1a0a0f] border border-red-950/80 hover:border-red-500/60 rounded-2xl overflow-hidden cursor-pointer shadow-lg hover:shadow-red-950/80 transition-all duration-200 active:scale-[0.98]"
+            >
+              <div className="relative aspect-[16/10] w-full bg-[#1b0a0f] overflow-hidden">
+                <img
+                  src={game.thumbnailUrl || game.iconDataUrl}
+                  alt={game.title}
+                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  loading="lazy"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#12070a] via-transparent to-black/30" />
 
-                  {/* Rating Tag */}
-                  <div className="absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded-md bg-black/80 backdrop-blur border border-red-900/40 text-[9px] font-bold text-amber-300 flex items-center gap-0.5">
-                    <Star className="w-2.5 h-2.5 fill-amber-300" />
-                    <span>{game.rating || 4.8}</span>
-                  </div>
-
-                  {/* Play Button Overlay on Hover/Focus */}
-                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/50 backdrop-blur-[2px]">
-                    <div className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 text-white font-black text-[11px] shadow-xl shadow-red-600/50 flex items-center gap-1.5 scale-90 group-hover:scale-100 transition-transform">
-                      <Play className="w-3 h-3 fill-white" />
-                      <span>PLAY</span>
-                    </div>
-                  </div>
+                <div className="absolute top-2 right-2 px-2 py-0.5 rounded-md bg-black/80 backdrop-blur border border-red-900/40 text-[10px] font-bold text-amber-300 flex items-center gap-1">
+                  <Star className="w-3 h-3 fill-amber-300" />
+                  <span>{game.rating || 4.9}</span>
                 </div>
 
-                {/* Info underneath */}
-                <div className="p-2 flex flex-col justify-between flex-1 gap-1">
-                  <h4 className="text-[11px] sm:text-xs font-bold text-white group-hover:text-red-300 transition-colors truncate">
-                    {game.title}
-                  </h4>
-                  <div className="flex items-center justify-between text-[10px] text-red-200/60">
-                    <span className="truncate max-w-[80px]">{game.category}</span>
-                    <span className="text-red-400 font-semibold text-[9px] flex items-center gap-0.5">
-                      <Tv className="w-2.5 h-2.5" />
-                      Play
-                    </span>
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/50 backdrop-blur-[2px]">
+                  <div className="px-4 py-2 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 text-white font-black text-xs shadow-xl shadow-red-600/50 flex items-center gap-1.5 scale-90 group-hover:scale-100 transition-transform">
+                    <Play className="w-3.5 h-3.5 fill-white" />
+                    <span>PLAY DIRECT</span>
                   </div>
                 </div>
               </div>
-            ))}
-          </div>
 
-          {/* Load More Button for Infinite Scrolling without limit */}
-          {displayCount < filteredGames.length && (
-            <div className="pt-2 pb-6 flex justify-center">
-              <button
-                onClick={() => setDisplayCount((prev) => prev + 36)}
-                className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-[#170a0e] hover:bg-gradient-to-r hover:from-red-600 hover:to-rose-600 border border-red-900/40 hover:border-red-500 text-white font-bold text-xs shadow-xl transition-all active:scale-95 cursor-pointer"
-              >
-                <span>Load More Games (+36)</span>
-                <ChevronDown className="w-4 h-4" />
-                <span className="text-[10px] text-red-300 font-mono">
-                  ({visibleGames.length} / {filteredGames.length})
-                </span>
-              </button>
+              <div className="p-3.5 flex flex-col justify-between flex-1">
+                <div>
+                  <h3 className="text-sm font-extrabold text-white group-hover:text-red-400 transition-colors line-clamp-1">
+                    {game.title}
+                  </h3>
+                  <p className="text-[11px] text-red-200/70 mt-1 line-clamp-2 leading-relaxed">
+                    {game.description || game.notes || 'Official Unity WebGL Game'}
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-between mt-3 pt-2 border-t border-red-950/60 text-[10px]">
+                  <span className="font-bold text-red-400">{game.category}</span>
+                  <span className="text-red-300/60 font-mono">100% Free · Cloud Host</span>
+                </div>
+              </div>
             </div>
-          )}
+          ))}
         </div>
       )}
 
-      {/* Floating Scroll to Top button */}
-      <button
-        onClick={scrollToTop}
-        className="fixed bottom-6 right-6 p-3 rounded-full bg-gradient-to-tr from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white shadow-2xl shadow-red-600/50 z-40 cursor-pointer active:scale-95 transition-all border border-red-400/40"
-        title="Back to Top"
-      >
-        <ArrowUp className="w-4 h-4" />
-      </button>
-
-      {/* 
-        MODAL: Add Any Game to Catalog (Red & Dark Obsidian)
-      */}
+      {/* Add Game Modal */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-in fade-in">
-          <div className="w-full max-w-md bg-[#12070a] border border-red-900/50 rounded-3xl p-6 shadow-2xl space-y-4 relative text-white">
-            <button
-              onClick={() => setIsAddModalOpen(false)}
-              className="absolute top-4 right-4 p-1.5 rounded-full text-red-300/70 hover:text-white bg-red-950/40 cursor-pointer"
-            >
-              <X className="w-4 h-4" />
-            </button>
-
-            <div className="space-y-1">
-              <h3 className="text-lg font-black text-white flex items-center gap-2">
-                <Plus className="w-5 h-5 text-red-500" />
-                <span>Add Game to Catalog</span>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className="bg-[#14060a] border border-red-800/80 rounded-3xl p-6 max-w-md w-full shadow-2xl text-white space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-base font-black flex items-center gap-2">
+                <Plus className="w-4 h-4 text-red-400" />
+                <span>Add Web Game Link</span>
               </h3>
-              <p className="text-xs text-red-200/70">
-                Paste any game link from CrazyGames, itch.io, or web runner.
-              </p>
+              <button
+                onClick={() => setIsAddModalOpen(false)}
+                className="p-1 rounded-lg text-red-400 hover:text-white"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
 
-            <form onSubmit={handleAddGameSubmit} className="space-y-3 pt-2">
+            <form onSubmit={handleAddGameSubmit} className="space-y-3 text-xs">
               <div>
-                <label className="text-[11px] font-bold text-red-200 block mb-1">
-                  Game Title *
-                </label>
+                <label className="block text-red-300 mb-1 font-semibold">Game Title</label>
                 <input
                   type="text"
                   required
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
-                  placeholder="e.g. Subway Surfers, Moto X3M"
-                  className="w-full bg-[#1c0a0f] border border-red-900/50 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-red-500"
+                  placeholder="e.g. 3D Track Rally"
+                  className="w-full bg-[#1b0a0f] border border-red-900/60 rounded-xl px-3 py-2 text-white outline-none focus:border-red-500"
                 />
               </div>
 
               <div>
-                <label className="text-[11px] font-bold text-red-200 block mb-1">
-                  Game URL *
-                </label>
+                <label className="block text-red-300 mb-1 font-semibold">Game Web Link (URL)</label>
                 <input
                   type="url"
                   required
                   value={newUrl}
                   onChange={(e) => setNewUrl(e.target.value)}
-                  placeholder="https://www.crazygames.com/game/... or https://..."
-                  className="w-full bg-[#1c0a0f] border border-red-900/50 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-red-500 font-mono"
+                  placeholder="https://..."
+                  className="w-full bg-[#1b0a0f] border border-red-900/60 rounded-xl px-3 py-2 text-white outline-none focus:border-red-500"
                 />
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="text-[11px] font-bold text-red-200 block mb-1">
-                    Category
-                  </label>
-                  <select
-                    value={newCategory}
-                    onChange={(e) => setNewCategory(e.target.value)}
-                    className="w-full bg-[#1c0a0f] border border-red-900/50 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-red-500"
-                  >
-                    <option value="Car & Driving">Car &amp; Driving</option>
-                    <option value="Action & Stunts">Action &amp; Stunts</option>
-                    <option value="Multiplayer .io">Multiplayer .io</option>
-                    <option value="Shooting">Shooting</option>
-                    <option value="Sports & Bike">Sports &amp; Bike</option>
-                    <option value="Mind & Puzzles">Mind &amp; Puzzles</option>
-                    <option value="Rhythm & Music">Rhythm &amp; Music</option>
-                    <option value="Arcade Classics">Arcade Classics</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="text-[11px] font-bold text-red-200 block mb-1">
-                    Logo / Thumbnail URL
-                  </label>
-                  <input
-                    type="url"
-                    value={newThumbnail}
-                    onChange={(e) => setNewThumbnail(e.target.value)}
-                    placeholder="https://... logo.png"
-                    className="w-full bg-[#1c0a0f] border border-red-900/50 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-red-500"
-                  />
-                </div>
               </div>
 
               <div>
-                <label className="text-[11px] font-bold text-red-200 block mb-1">
-                  Description
-                </label>
-                <textarea
-                  rows={2}
-                  value={newDescription}
-                  onChange={(e) => setNewDescription(e.target.value)}
-                  placeholder="Short summary of game controls and gameplay..."
-                  className="w-full bg-[#1c0a0f] border border-red-900/50 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-red-500 resize-none"
-                />
+                <label className="block text-red-300 mb-1 font-semibold">Category</label>
+                <select
+                  value={newCategory}
+                  onChange={(e) => setNewCategory(e.target.value)}
+                  className="w-full bg-[#1b0a0f] border border-red-900/60 rounded-xl px-3 py-2 text-white outline-none"
+                >
+                  <option value="Car & Driving">Car & Driving</option>
+                  <option value="3D Simulation">3D Simulation</option>
+                  <option value="Arcade">Arcade</option>
+                </select>
               </div>
 
-              <div className="flex gap-2 pt-2">
+              <div className="flex justify-end gap-2 pt-2">
                 <button
                   type="button"
                   onClick={() => setIsAddModalOpen(false)}
-                  className="flex-1 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-red-200 text-xs font-bold"
+                  className="px-4 py-2 rounded-xl bg-red-950/60 text-red-300 hover:text-white"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-lg shadow-red-600/40 cursor-pointer disabled:opacity-50"
+                  className="px-5 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold disabled:opacity-50"
                 >
-                  {isSubmitting ? (
-                    <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    <>
-                      <Plus className="w-4 h-4" />
-                      <span>Add to Library</span>
-                    </>
-                  )}
+                  {isSubmitting ? 'Adding...' : 'Save Game'}
                 </button>
               </div>
             </form>
