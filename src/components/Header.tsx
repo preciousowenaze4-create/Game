@@ -1,17 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { Flame, Code2, Tv, Sparkles, Database } from 'lucide-react';
+import { Flame, Tv } from 'lucide-react';
 import { StorageStats } from '../types/game';
 import { formatBytes } from '../utils/db';
 
 interface HeaderProps {
   stats: StorageStats;
-  onOpenExportModal: () => void;
   onOpenAirPlayModal: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
   stats,
-  onOpenExportModal,
   onOpenAirPlayModal,
 }) => {
   const [supabaseConnected, setSupabaseConnected] = useState<boolean>(false);
@@ -58,9 +56,8 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
       </div>
 
-      {/* Right Actions: AirPlay + Export Button (Zero Google Login Barrier) */}
+      {/* Right Actions: AirPlay TV Cast */}
       <div className="flex items-center gap-2">
-        {/* AirPlay Screen Mirroring & TV Cast button */}
         <button
           onClick={onOpenAirPlayModal}
           className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-white bg-red-950/70 hover:bg-red-600/80 active:scale-95 border border-red-700/50 hover:border-red-500 rounded-xl shadow-md shadow-red-950/50 transition-all cursor-pointer"
@@ -68,15 +65,6 @@ export const Header: React.FC<HeaderProps> = ({
         >
           <Tv className="w-3.5 h-3.5 text-red-400 group-hover:text-white" />
           <span className="hidden sm:inline">AirPlay</span>
-        </button>
-
-        {/* Export / Single-File Code Modal */}
-        <button
-          onClick={onOpenExportModal}
-          className="p-2 sm:px-3 sm:py-2 text-xs font-semibold text-red-200/80 bg-red-950/40 hover:bg-red-900/40 active:scale-95 border border-red-800/30 hover:border-red-600/50 rounded-xl transition-all cursor-pointer"
-          title="Export single-file HTML"
-        >
-          <Code2 className="w-4 h-4 text-red-400" />
         </button>
       </div>
     </header>

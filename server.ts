@@ -657,14 +657,36 @@ app.get('/api/games/:id/download', async (req, res) => {
   return res.send(fileBuffer);
 });
 
-// 5. Get stored backend game content for live iframe execution
-app.get('/api/games/:id/content', (req, res) => {
+// 5. Get stored backend game content for live iframe execution (Inline HTML5 Play)
+app.get(['/api/games/:id/content', '/api/games/:id/play'], async (req, res) => {
   const game = inMemoryGamesStore.get(req.params.id);
-  if (!game) {
-    return res.status(404).send('Game not found');
+  if (game && game.htmlContent) {
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.setHeader('Content-Disposition', 'inline');
+    return res.send(game.htmlContent);
   }
-  res.setHeader('Content-Type', 'text/html; charset=utf-8');
-  res.send(game.htmlContent);
+
+  // If buffer exists
+  if (game && game.rawBuffer) {
+    res.setHeader('Content-Type', game.mimeType || 'text/html; charset=utf-8');
+    res.setHeader('Content-Disposition', 'inline');
+    return res.send(game.rawBuffer);
+  }
+
+  // If stored in Supabase
+  const client = getSupabaseClient();
+  if (client) {
+    try {
+      const { data: dbGame } = await client.from('games').select('*').eq('id', req.params.id).maybeSingle();
+      if (dbGame && dbGame.storage_url) {
+        return res.redirect(dbGame.storage_url);
+      }
+    } catch (err) {
+      console.warn('Game play lookup error:', err);
+    }
+  }
+
+  return res.status(404).send('<!DOCTYPE html><html><body style="background:#0a0407;color:#fff;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;"><h3>Game content loading...</h3></body></html>');
 });
 
 // 6. Dynamic Supabase Database Integration: Pull stored game records from Supabase table 'games'

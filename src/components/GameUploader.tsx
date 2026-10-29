@@ -5,12 +5,9 @@ import {
   AlertCircle,
   CheckCircle2,
   Loader2,
-  FileCode2,
-  Sparkles,
   Smartphone,
   Image as ImageIcon,
   FolderArchive,
-  Flame,
   Zap,
 } from 'lucide-react';
 import { GameItem } from '../types/game';
@@ -97,40 +94,6 @@ export const GameUploader: React.FC<GameUploaderProps> = ({
     if (file) {
       processFile(file);
     }
-  };
-
-  // Quick Demo Game generator for immediate 1-click test
-  const handleInstallDemoGame = () => {
-    const htmlDemo = `<!DOCTYPE html>
-<html>
-<head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<style>
-  body { margin: 0; background: #0a0507; color: #fff; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; text-align: center; }
-  h1 { font-size: 28px; color: #ef4444; margin-bottom: 8px; text-shadow: 0 0 20px rgba(239,68,68,0.5); }
-  p { color: #fca5a5; font-size: 14px; max-width: 300px; margin-bottom: 24px; }
-  .btn { padding: 14px 28px; background: linear-gradient(135deg, #ef4444, #991b1b); color: #fff; border: none; border-radius: 16px; font-weight: bold; font-size: 16px; cursor: pointer; box-shadow: 0 10px 25px rgba(239,68,68,0.4); }
-  .score { font-size: 48px; font-weight: 900; color: #fff; margin: 16px 0; }
-</style>
-</head>
-<body>
-  <h1>RED SPEED RACER</h1>
-  <p>Tap the turbo button to speed up!</p>
-  <div class="score" id="score">0 MPH</div>
-  <button class="btn" onclick="speedUp()">TAP FOR NITRO</button>
-  <script>
-    let speed = 0;
-    function speedUp() {
-      speed += 15;
-      document.getElementById('score').innerText = speed + ' MPH';
-    }
-  </script>
-</body>
-</html>`;
-
-    const blob = new Blob([htmlDemo], { type: 'text/html' });
-    const file = new File([blob], 'Red-Speed-Racer.html', { type: 'text/html' });
-    processFile(file);
   };
 
   return (
@@ -247,22 +210,6 @@ export const GameUploader: React.FC<GameUploaderProps> = ({
             <span className="font-medium">{errorMessage}</span>
           </div>
         )}
-      </div>
-
-      {/* Quick 1-Click Demo File Test Option */}
-      <div className="flex items-center justify-between p-3 rounded-2xl bg-[#14080c] border border-red-900/30 text-xs">
-        <div className="flex items-center gap-2 text-red-200/80">
-          <Sparkles className="w-3.5 h-3.5 text-red-400" />
-          <span>Want to test upload right now?</span>
-        </div>
-        <button
-          type="button"
-          onClick={handleInstallDemoGame}
-          disabled={isProcessing}
-          className="px-3 py-1.5 rounded-xl bg-red-600/30 hover:bg-red-600 border border-red-500/40 hover:border-red-400 text-white font-bold text-[11px] transition-all cursor-pointer active:scale-95"
-        >
-          Install Demo Game
-        </button>
       </div>
     </div>
   );

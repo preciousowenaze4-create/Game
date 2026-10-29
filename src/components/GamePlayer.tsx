@@ -157,12 +157,30 @@ export const GamePlayer: React.FC<GamePlayerProps> = ({ game, onExit, onOpenAirP
 
   // Determine webview source URL: Always resolve to clean unblocked direct HTML5 runner
   const webViewSrc = useMemo(() => {
+    // If the game has direct htmlContent (e.g. uploaded file, picture viewer, 3D runner), prefer srcDoc
+    if (game.htmlContent && game.htmlContent.trim().length > 0) {
+      return undefined;
+    }
     const rawUrl = game.webUrl || game.gameUrl || game.storageUrl;
     if (rawUrl) {
+      if (rawUrl.includes('/download')) {
+        return `/api/games/${game.id}/content`;
+      }
       return resolvePlayableGameUrl(rawUrl);
     }
     return undefined;
-  }, [game.webUrl, game.gameUrl, game.storageUrl]);
+  }, [game.id, game.webUrl, game.gameUrl, game.storageUrl, game.htmlContent]);
+
+  // Auto-focus the game iframe so touch and key controls work immediately
+  const handleIframeLoaded = () => {
+    setIsIframeLoaded(true);
+    try {
+      if (iframeRef.current) {
+        iframeRef.current.focus();
+        iframeRef.current.contentWindow?.focus();
+      }
+    } catch {}
+  };
 
   return (
     <div className="fixed inset-0 z-50 bg-black flex flex-col w-screen h-screen overflow-hidden select-none">
@@ -286,19 +304,19 @@ export const GamePlayer: React.FC<GamePlayerProps> = ({ game, onExit, onOpenAirP
                 <img
                   src={coverUrl}
                   alt="logo"
-                  className="w-20 h-20 rounded-2xl object-cover shadow-2xl animate-pulse ring-2 ring-indigo-500/40"
+                  className="w-20 h-20 rounded-2xl object-cover shadow-2xl animate-pulse ring-2 ring-red-500/50"
                 />
               ) : (
-                <div className="w-20 h-20 rounded-2xl bg-indigo-600 flex items-center justify-center text-white text-3xl animate-pulse">
+                <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-red-600 to-rose-700 flex items-center justify-center text-white text-3xl animate-pulse shadow-lg shadow-red-600/40">
                   🎮
                 </div>
               )}
               <div className="text-lg font-black text-white tracking-wide">{game.title}</div>
-              <div className="text-xs text-indigo-400 flex items-center gap-2 font-medium">
-                <div className="w-3.5 h-3.5 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin" />
+              <div className="text-xs text-red-400 flex items-center gap-2 font-medium">
+                <div className="w-3.5 h-3.5 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
                 <span>Launching into Full-Screen Landscape...</span>
               </div>
-              <div className="text-[11px] text-slate-500">
+              <div className="text-[11px] text-red-300/60">
                 Native HTML5 touch &amp; joystick controls enabled
               </div>
             </div>
@@ -313,32 +331,33 @@ export const GamePlayer: React.FC<GamePlayerProps> = ({ game, onExit, onOpenAirP
             key={`${game.id}-${loadKey}`}
             ref={iframeRef}
             src={webViewSrc}
-            srcDoc={!webViewSrc && game.htmlContent ? game.htmlContent : undefined}
+            srcDoc={game.htmlContent ? game.htmlContent : undefined}
             title={game.title}
-            onLoad={() => setIsIframeLoaded(true)}
+            onLoad={handleIframeLoaded}
             className="w-full h-full border-none bg-black block touch-auto"
-            allow="autoplay; fullscreen; accelerometer; gyroscope; gamepad; cross-origin-isolated; pointer-lock"
+            allow="autoplay *; fullscreen *; accelerometer *; gyroscope *; gamepad *; cross-origin-isolated *; pointer-lock *; clipboard-write *"
+            tabIndex={0}
           />
         </div>
       ) : (
-        /* CASE 3: NATIVE APK/IPA DOWNLOAD VIEW */
-        <div className="w-full h-full flex flex-col items-center justify-center p-6 bg-[#090b14]">
-          <div className="max-w-md w-full p-6 bg-[#111422] border border-white/10 rounded-3xl text-center space-y-4 shadow-2xl">
+        /* CASE 3: NATIVE APK/IPA DOWNLOAD VIEW (Red & Dark Obsidian) */
+        <div className="w-full h-full flex flex-col items-center justify-center p-6 bg-[#0a0407]">
+          <div className="max-w-md w-full p-6 bg-[#14070b] border border-red-900/60 rounded-3xl text-center space-y-4 shadow-2xl">
             {coverUrl && (
-              <img src={coverUrl} alt="icon" className="w-20 h-20 mx-auto rounded-2xl object-cover" />
+              <img src={coverUrl} alt="icon" className="w-20 h-20 mx-auto rounded-2xl object-cover shadow-xl ring-2 ring-red-500/40" />
             )}
             <h3 className="text-lg font-bold text-white">{game.title}</h3>
-            <p className="text-xs text-slate-400 font-mono">{game.filename}</p>
+            <p className="text-xs text-red-300/70 font-mono">{game.filename}</p>
             <button
               onClick={handleDownload}
-              className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-emerald-600/30"
+              className="w-full py-3 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-red-950/60 active:scale-95 transition-all"
             >
               <Download className="w-4 h-4" />
               <span>Download File ({formatBytes(game.fileSize)})</span>
             </button>
             <button
               onClick={handleExit}
-              className="w-full py-2.5 text-xs text-slate-400 hover:text-white"
+              className="w-full py-2.5 text-xs text-red-300/70 hover:text-white"
             >
               Back to Catalog
             </button>

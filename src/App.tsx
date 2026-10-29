@@ -30,7 +30,6 @@ import { GameUploader } from './components/GameUploader';
 import { GameCard } from './components/GameCard';
 import { GamePlayer } from './components/GamePlayer';
 import { DownloadsManager } from './components/DownloadsManager';
-import { StandaloneExportModal } from './components/StandaloneExportModal';
 import { EditGameModal } from './components/EditGameModal';
 import { TransferProgressTracker } from './components/TransferProgressTracker';
 import { BossGameCatalog } from './components/BossGameCatalog';
@@ -52,7 +51,6 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [activeCategory, setActiveCategory] = useState<string>('All');
   const [activePlayingGame, setActivePlayingGame] = useState<GameItem | null>(null);
-  const [isExportModalOpen, setIsExportModalOpen] = useState<boolean>(false);
   const [isAirPlayCasting, setIsAirPlayCasting] = useState<boolean>(false);
   const [editingGame, setEditingGame] = useState<{ id: string; title: string } | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -258,7 +256,6 @@ export default function App() {
           {/* Header */}
           <Header
             stats={stats}
-            onOpenExportModal={() => setIsExportModalOpen(true)}
             onOpenAirPlayModal={handleTriggerAirPlay}
           />
 
@@ -472,12 +469,6 @@ export default function App() {
           <span>{toastMessage}</span>
         </div>
       )}
-
-      {/* Standalone Export Modal */}
-      <StandaloneExportModal
-        isOpen={isExportModalOpen}
-        onClose={() => setIsExportModalOpen(false)}
-      />
 
       {/* Rename Modal */}
       {editingGame && (
